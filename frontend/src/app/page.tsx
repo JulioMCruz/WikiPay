@@ -64,7 +64,7 @@ export default function Home() {
             </CardHeader>
             <CardContent className="space-y-2">
               <p>1. Browse articles and previews</p>
-              <p>2. Click "Unlock Anonymously"</p>
+              <p>2. Click &ldquo;Unlock Anonymously&rdquo;</p>
               <p>3. zkProof generated in browser (1-2 sec)</p>
               <p>4. Pay $0.01-0.10 with <strong>zero tracking</strong></p>
               <p>5. Read full article instantly</p>

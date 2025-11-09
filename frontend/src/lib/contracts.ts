@@ -3,13 +3,13 @@ import { Address } from 'viem';
 /**
  * WikiPay Stylus Contract Configuration
  *
- * Contract: Arbitrum Stylus (Rust/WASM)
- * Address: 0x5748ebaaa22421de872ed8b3be61fc1ac66f3e92
+ * Contract: Arbitrum Stylus (Rust/WASM) v3 - Working
+ * Address: 0xab60b91ecb1281Ff9B53A9a3FBBfe8C93afB72b3
  * Network: Arbitrum Sepolia
  * Deployed: November 9, 2025
  * Gas Savings: 90% vs Solidity
  */
-export const WIKIPAY_ADDRESS: Address = (process.env.NEXT_PUBLIC_WIKIPAY_ADDRESS || '0x5748ebaaa22421de872ed8b3be61fc1ac66f3e92') as Address;
+export const WIKIPAY_ADDRESS: Address = (process.env.NEXT_PUBLIC_WIKIPAY_ADDRESS || '0xab60b91ecb1281Ff9B53A9a3FBBfe8C93afB72b3') as Address;
 
 /**
  * WikiPay Stylus Contract ABI
@@ -33,11 +33,18 @@ export const WIKIPAY_ABI = [
     "inputs": [
       { "internalType": "uint256", "name": "article_id", "type": "uint256" },
       { "internalType": "bytes32", "name": "nullifier", "type": "bytes32" },
-      { "internalType": "bytes", "name": "proof", "type": "bytes" }
+      { "internalType": "bytes32", "name": "proof", "type": "bytes32" }
     ],
     "name": "unlockArticleAnonymous",
-    "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "article_id", "type": "uint256" }],
+    "name": "getEncryptedContent",
+    "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+    "stateMutability": "view",
     "type": "function"
   },
   {

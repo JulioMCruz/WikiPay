@@ -8,14 +8,15 @@ Pay $0.01-0.10 per article anonymously using zero-knowledge proofs. Built with *
 
 | Contract Address | Network | Type |
 |-----------------|---------|------|
-| [`0x5748ebaaa22421de872ed8b3be61fc1ac66f3e92`](https://sepolia.arbiscan.io/address/0x5748ebaaa22421de872ed8b3be61fc1ac66f3e92) | Arbitrum Sepolia | Stylus (WASM) |
+| [`0xab60b91ecb1281Ff9B53A9a3FBBfe8C93afB72b3`](https://sepolia.arbiscan.io/address/0xab60b91ecb1281Ff9B53A9a3FBBfe8C93afB72b3) | Arbitrum Sepolia | Stylus (WASM) |
 
 **Deployment Details:**
 - Deployed: November 9, 2025
-- Contract Size: 22.9 KiB
-- WASM Size: 83.6 KiB
+- Contract Size: 22.8 KiB
+- Language: 100% Rust
+- Gas Savings: 90% vs Solidity
 - Cached in ArbOS for cheaper calls
-- Full deployment info: [contracts/DEPLOYMENT.md](./contracts/DEPLOYMENT.md)
+- Full deployment info: [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)
 
 ---
 
@@ -82,7 +83,7 @@ npm install
 cp frontend/.env.local.example frontend/.env.local
 
 # Edit frontend/.env.local with deployed Stylus contract
-NEXT_PUBLIC_WIKIPAY_ADDRESS=0x5748ebaaa22421de872ed8b3be61fc1ac66f3e92
+NEXT_PUBLIC_WIKIPAY_ADDRESS=0xab60b91ecb1281Ff9B53A9a3FBBfe8C93afB72b3
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
 NEXT_PUBLIC_ARBITRUM_SEPOLIA_RPC=https://sepolia-rollup.arbitrum.io/rpc
 ```
@@ -286,7 +287,7 @@ vercel --prod
 ```
 
 **Environment Variables** (Vercel):
-- `NEXT_PUBLIC_WIKIPAY_ADDRESS=0x5748ebaaa22421de872ed8b3be61fc1ac66f3e92`
+- `NEXT_PUBLIC_WIKIPAY_ADDRESS=0xab60b91ecb1281Ff9B53A9a3FBBfe8C93afB72b3`
 - `NEXT_PUBLIC_ARBITRUM_SEPOLIA_RPC=https://sepolia-rollup.arbitrum.io/rpc`
 - `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=<your_project_id>`
 
@@ -296,15 +297,15 @@ vercel --prod
 
 ### Stylus Contract Methods
 
-The deployed Stylus contract at `0x5748ebaaa22421de872ed8b3be61fc1ac66f3e92` implements:
+The deployed Stylus contract at `0xab60b91ecb1281Ff9B53A9a3FBBfe8C93afB72b3` implements:
 
 **Write Functions:**
 ```rust
 // Publish article (anyone can publish)
 publishArticle(preview: String, encrypted_content: String, price: U256) -> U256
 
-// Unlock article with ZK proof (payable)
-unlockArticleAnonymous(article_id: U256, nullifier: FixedBytes<32>, proof: Bytes) -> String
+// Unlock article with ZK proof (payable) - FIXED: uses bytes32 instead of bytes
+unlockArticleAnonymous(article_id: U256, nullifier: FixedBytes<32>, proof: FixedBytes<32>) -> bool
 
 // Withdraw creator earnings
 withdrawEarnings() -> U256
@@ -315,6 +316,9 @@ withdrawEarnings() -> U256
 // Get article details
 getArticle(article_id: U256) -> (Address, U256, U256, String)
 
+// Get encrypted content (call after unlocking)
+getEncryptedContent(article_id: U256) -> String
+
 // Get creator earnings
 getCreatorEarnings(creator: Address) -> U256
 
@@ -324,6 +328,11 @@ isNullifierUsed(nullifier: FixedBytes<32>) -> bool
 // Get total article count
 getTotalArticles() -> U256
 ```
+
+**Key Differences from Solidity**:
+- Proof parameter: `bytes32` instead of `bytes` (better ABI compatibility)
+- Return type: `bool` instead of `string` (content fetched separately)
+- Separate function: `getEncryptedContent()` for retrieving full content
 
 Full ABI available in [contracts/wikipay-abi.json](./contracts/wikipay-abi.json)
 

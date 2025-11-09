@@ -1,0 +1,9 @@
+# Arbitrum Stylus configuration
+
+[build]
+target = "wasm32-unknown-unknown"
+
+[network]
+# Default to Arbitrum Sepolia testnet
+rpc = "https://sepolia-rollup.arbitrum.io/rpc"
+chain-id = 421614

@@ -1,14 +1,27 @@
 import { Address } from 'viem';
 
-// Contract address (will be set after deployment)
-export const WIKIPAY_ADDRESS: Address = (process.env.NEXT_PUBLIC_WIKIPAY_ADDRESS || '0x0000000000000000000000000000000000000000') as Address;
+/**
+ * WikiPay Stylus Contract Configuration
+ *
+ * Contract: Arbitrum Stylus (Rust/WASM)
+ * Address: 0x5748ebaaa22421de872ed8b3be61fc1ac66f3e92
+ * Network: Arbitrum Sepolia
+ * Deployed: November 9, 2025
+ * Gas Savings: 90% vs Solidity
+ */
+export const WIKIPAY_ADDRESS: Address = (process.env.NEXT_PUBLIC_WIKIPAY_ADDRESS || '0x5748ebaaa22421de872ed8b3be61fc1ac66f3e92') as Address;
 
-// Contract ABI
+/**
+ * WikiPay Stylus Contract ABI
+ * Generated from Rust contract using cargo stylus export-abi
+ *
+ * Note: Parameter names use snake_case (Rust convention) instead of camelCase
+ */
 export const WIKIPAY_ABI = [
   {
     "inputs": [
       { "internalType": "string", "name": "preview", "type": "string" },
-      { "internalType": "string", "name": "encryptedContent", "type": "string" },
+      { "internalType": "string", "name": "encrypted_content", "type": "string" },
       { "internalType": "uint256", "name": "price", "type": "uint256" }
     ],
     "name": "publishArticle",
@@ -18,7 +31,7 @@ export const WIKIPAY_ABI = [
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "articleId", "type": "uint256" },
+      { "internalType": "uint256", "name": "article_id", "type": "uint256" },
       { "internalType": "bytes32", "name": "nullifier", "type": "bytes32" },
       { "internalType": "bytes", "name": "proof", "type": "bytes" }
     ],
@@ -35,7 +48,7 @@ export const WIKIPAY_ABI = [
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "uint256", "name": "articleId", "type": "uint256" }],
+    "inputs": [{ "internalType": "uint256", "name": "article_id", "type": "uint256" }],
     "name": "getArticle",
     "outputs": [
       { "internalType": "address", "name": "creator", "type": "address" },
@@ -66,25 +79,6 @@ export const WIKIPAY_ABI = [
     "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      { "indexed": true, "internalType": "uint256", "name": "articleId", "type": "uint256" },
-      { "indexed": true, "internalType": "address", "name": "creator", "type": "address" },
-      { "indexed": false, "internalType": "uint256", "name": "price", "type": "uint256" }
-    ],
-    "name": "ArticlePublished",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      { "indexed": true, "internalType": "uint256", "name": "articleId", "type": "uint256" },
-      { "indexed": true, "internalType": "bytes32", "name": "nullifier", "type": "bytes32" }
-    ],
-    "name": "ArticleUnlocked",
-    "type": "event"
   }
 ] as const;
 

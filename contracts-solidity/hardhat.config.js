@@ -25,9 +25,9 @@ module.exports = {
     },
   },
   etherscan: {
-    apiKey: {
-      arbitrumSepolia: process.env.ARBISCAN_API_KEY || "",
-      arbitrumOne: process.env.ARBISCAN_API_KEY || "",
-    },
+    apiKey: process.env.ARBISCAN_API_KEY || "",
+  },
+  sourcify: {
+    enabled: false,
   },
 };

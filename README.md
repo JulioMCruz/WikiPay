@@ -281,18 +281,6 @@ pub fn is_nullifier_used(nullifier: FixedBytes<32>) -> bool
 
 ---
 
-## 📝 Implementation Plan
-
-See [IMPLEMENTATION-PLAN.md](./IMPLEMENTATION-PLAN.md) for the complete 8-hour development guide.
-
-**Phases**:
-- **Hours 0-3**: Smart Contracts (Rust + Stylus)
-- **Hours 3-5**: ZK Circuits (Plonky2 + WASM)
-- **Hours 5-7**: Frontend (Next.js + Wagmi)
-- **Hours 7-8**: Testing & Polish
-
----
-
 ## 🤝 Contributing
 
 This is part of a portfolio of Web3 projects. See main repository for contribution guidelines.

@@ -1,0 +1,64 @@
+[
+  {
+    "inputs": [
+      { "internalType": "string", "name": "preview", "type": "string" },
+      { "internalType": "string", "name": "encrypted_content", "type": "string" },
+      { "internalType": "uint256", "name": "price", "type": "uint256" }
+    ],
+    "name": "publishArticle",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "article_id", "type": "uint256" },
+      { "internalType": "bytes32", "name": "nullifier", "type": "bytes32" },
+      { "internalType": "bytes", "name": "proof", "type": "bytes" }
+    ],
+    "name": "unlockArticleAnonymous",
+    "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "withdrawEarnings",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "article_id", "type": "uint256" }],
+    "name": "getArticle",
+    "outputs": [
+      { "internalType": "address", "name": "creator", "type": "address" },
+      { "internalType": "uint256", "name": "price", "type": "uint256" },
+      { "internalType": "uint256", "name": "totalUnlocks", "type": "uint256" },
+      { "internalType": "string", "name": "preview", "type": "string" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "creator", "type": "address" }],
+    "name": "getCreatorEarnings",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "bytes32", "name": "nullifier", "type": "bytes32" }],
+    "name": "isNullifierUsed",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getTotalArticles",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

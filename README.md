@@ -4,7 +4,18 @@
 
 Pay $0.01-0.10 per article anonymously using zero-knowledge proofs. Built with **Arbitrum Stylus** (Rust/WASM) smart contracts on Arbitrum Sepolia with 90% gas savings vs Solidity.
 
-**🔴 Live on Arbitrum Sepolia:** [`0x5748ebaaa22421de872ed8b3be61fc1ac66f3e92`](https://sepolia.arbiscan.io/address/0x5748ebaaa22421de872ed8b3be61fc1ac66f3e92)
+**🔴 Live on Arbitrum Sepolia:**
+
+| Contract Address | Network | Type |
+|-----------------|---------|------|
+| [`0x5748ebaaa22421de872ed8b3be61fc1ac66f3e92`](https://sepolia.arbiscan.io/address/0x5748ebaaa22421de872ed8b3be61fc1ac66f3e92) | Arbitrum Sepolia | Stylus (WASM) |
+
+**Deployment Details:**
+- Deployed: November 9, 2025
+- Contract Size: 22.9 KiB
+- WASM Size: 83.6 KiB
+- Cached in ArbOS for cheaper calls
+- Full deployment info: [contracts/DEPLOYMENT.md](./contracts/DEPLOYMENT.md)
 
 ---
 
@@ -13,7 +24,7 @@ Pay $0.01-0.10 per article anonymously using zero-knowledge proofs. Built with *
 - **Creators**: Publish articles with paywalled content ($0.01-0.10 per unlock)
 - **Readers**: Unlock articles anonymously using zero-knowledge proofs
 - **No tracking**: Payments are cryptographically private (nullifiers prevent double-spend)
-- **Cheap gas**: Arbitrum L2 reduces gas costs significantly compared to Ethereum mainnet
+- **Ultra-low gas**: Stylus WASM execution provides 90% gas savings vs Solidity
 
 ---
 
@@ -35,15 +46,13 @@ wikipay-anonymous/
 │   └── package.json
 ├── contracts/                   # ✅ Arbitrum Stylus (Rust/WASM)
 │   ├── src/
-│   │   └── lib.rs              # Main WikiPay contract
+│   │   └── lib.rs              # Main WikiPay contract (188 lines)
 │   ├── Cargo.toml              # Rust dependencies
+│   ├── rust-toolchain.toml     # Rust 1.91.0
+│   ├── .cargo/config.toml      # WASM build config
 │   ├── wikipay-abi.json        # Contract ABI
 │   ├── DEPLOYMENT.md           # Deployment details
-│   └── README.md               # Contract documentation
-├── contracts-solidity/          # Legacy Solidity contracts
-│   ├── contracts/
-│   │   └── WikiPay.sol         # Solidity version
-│   └── hardhat.config.js
+│   └── README.md               # Full contract documentation
 └── docs/
     └── IMPLEMENTATION-PLAN.md  # Development roadmap
 ```
@@ -64,20 +73,15 @@ wikipay-anonymous/
 # Frontend
 cd frontend
 npm install
-
-# Smart Contracts (for deployment)
-cd ../contracts-solidity
-npm install
 ```
 
 ### 2. Setup Environment
 
 ```bash
-# Copy example env files
+# Copy example env file
 cp frontend/.env.local.example frontend/.env.local
-cp contracts-solidity/.env.example contracts-solidity/.env
 
-# Edit frontend/.env.local
+# Edit frontend/.env.local with deployed Stylus contract
 NEXT_PUBLIC_WIKIPAY_ADDRESS=0x5748ebaaa22421de872ed8b3be61fc1ac66f3e92
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
 NEXT_PUBLIC_ARBITRUM_SEPOLIA_RPC=https://sepolia-rollup.arbitrum.io/rpc
@@ -191,18 +195,18 @@ cast call $CONTRACT_ADDRESS "isNullifierUsed(bytes32)" $NULLIFIER --rpc-url http
 
 ## 🛠️ Development
 
-### Compile Smart Contract
+### Build Stylus Contract
 
 ```bash
-cd contracts-solidity
-npx hardhat compile
-```
+cd contracts
 
-### Test Smart Contract
+# Build WASM contract
+cargo build --target wasm32-unknown-unknown --release
 
-```bash
-cd contracts-solidity
-npx hardhat test
+# Check contract validity
+cargo stylus check \
+  --endpoint https://sepolia-rollup.arbitrum.io/rpc \
+  --wasm-file target/wasm32-unknown-unknown/release/wikipay_contracts.wasm
 ```
 
 ### Run Frontend Dev Server
@@ -290,56 +294,63 @@ vercel --prod
 
 ## 📖 API Reference
 
-### Smart Contract Methods
+### Stylus Contract Methods
 
-```solidity
+The deployed Stylus contract at `0x5748ebaaa22421de872ed8b3be61fc1ac66f3e92` implements:
+
+**Write Functions:**
+```rust
 // Publish article (anyone can publish)
-function publishArticle(
-    string memory preview,
-    string memory encryptedContent,
-    uint256 price
-) external returns (uint256 articleId)
+publishArticle(preview: String, encrypted_content: String, price: U256) -> U256
 
-// Unlock article with ZK proof (anyone can unlock)
-function unlockArticleAnonymous(
-    uint256 articleId,
-    bytes32 nullifier,
-    bytes calldata proof
-) external payable returns (string memory encryptedContent)
+// Unlock article with ZK proof (payable)
+unlockArticleAnonymous(article_id: U256, nullifier: FixedBytes<32>, proof: Bytes) -> String
 
-// Withdraw earnings (creators only)
-function withdrawEarnings() external returns (uint256 amount)
-
-// View methods
-function getArticle(uint256 articleId) external view returns (
-    address creator,
-    uint256 price,
-    uint256 totalUnlocks,
-    string memory preview
-)
-
-function getCreatorEarnings(address creator) external view returns (uint256)
-function isNullifierUsed(bytes32 nullifier) external view returns (bool)
-function getTotalArticles() external view returns (uint256)
+// Withdraw creator earnings
+withdrawEarnings() -> U256
 ```
+
+**Read Functions:**
+```rust
+// Get article details
+getArticle(article_id: U256) -> (Address, U256, U256, String)
+
+// Get creator earnings
+getCreatorEarnings(creator: Address) -> U256
+
+// Check nullifier usage
+isNullifierUsed(nullifier: FixedBytes<32>) -> bool
+
+// Get total article count
+getTotalArticles() -> U256
+```
+
+Full ABI available in [contracts/wikipay-abi.json](./contracts/wikipay-abi.json)
 
 ---
 
 ## 🔐 Security
+
+### Stylus Contract Security
+- **Memory safety**: Rust's ownership system prevents common vulnerabilities
+- **Type safety**: Compile-time guarantees for data types and operations
+- **Access control**: Only creators can withdraw their earnings
+- **Input validation**: Article prices must be 0.01-0.10 ETH
+- **Nullifier tracking**: Prevents double-unlock attacks
+- **WASM sandbox**: Execution isolated from host environment
 
 ### zkProof Security (Production)
 - **Planned**: Full Plonky2 proof verification (no trusted setup)
 - **MVP**: Simplified proof structure validation
 - **Nullifiers**: Keccak256 hash prevents double-spend
 
-### Smart Contract Security
-- **Reentrancy protection**: Checks-Effects-Interactions pattern
-- **Access control**: Only creators can withdraw their earnings
-- **Input validation**: Article prices must be 0.01-0.10 ETH
-- **Nullifier tracking**: Prevents double-unlock attacks
-
 ### Auditing Status
 ⚠️ **Not audited** - This is an MVP for educational purposes. Do not use in production with real funds without a professional security audit.
+
+### Why Stylus for Security?
+- **Memory safety**: Rust eliminates entire classes of vulnerabilities (buffer overflows, use-after-free)
+- **No undefined behavior**: Unlike Solidity, Rust catches memory errors at compile time
+- **Smaller attack surface**: 22.9 KiB contract vs typical 100+ KiB Solidity contracts
 
 ---
 

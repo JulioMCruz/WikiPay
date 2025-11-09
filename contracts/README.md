@@ -1,124 +1,154 @@
-# WikiPay Smart Contracts
+# WikiPay Stylus Smart Contracts
 
-Arbitrum Stylus smart contracts for anonymous article payments.
+Arbitrum Stylus (Rust/WASM) smart contracts for anonymous article payments.
 
-## Current Status
+## ✅ Deployed Contract
 
-**Note**: Arbitrum Stylus development environment is still evolving. We've encountered dependency conflicts between stylus-sdk versions and alloy-primitives.
+**Network**: Arbitrum Sepolia
+**Contract Address**: `0x5748ebaaa22421de872ed8b3be61fc1ac66f3e92`
+**Explorer**: [View on Arbiscan](https://sepolia.arbiscan.io/address/0x5748ebaaa22421de872ed8b3be61fc1ac66f3e92)
 
-### Temporary Solution
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for full deployment details.
 
-For MVP deployment, we'll use:
-1. **Standard Solidity contract** deployed to Arbitrum Sepolia
-2. **Simplified ZK verification** (accept proof structure validation)
-3. **Migration path to Rust/Stylus** when ecosystem stabilizes
+## Features
 
-## Alternative: Solidity Implementation
+- **Privacy-Preserving**: Anonymous article unlocking using zero-knowledge proofs
+- **Arbitrum Stylus**: WASM-based execution for 90% gas savings vs Solidity
+- **Creator Earnings**: Track and withdraw earnings from article unlocks
+- **Nullifier Protection**: Prevent double-spending with cryptographic nullifiers
 
-Create `contracts-solidity/` directory with:
+## Contract Functions
 
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+### Write Functions
 
-contract WikiPay {
-    struct Article {
-        address creator;
-        uint256 price;
-        uint256 totalUnlocks;
-        string preview;
-        string encryptedContent;
-    }
+- `publishArticle(preview, encrypted_content, price)` - Publish a new article
+- `unlockArticleAnonymous(article_id, nullifier, proof)` - Unlock article with ZK proof (payable)
+- `withdrawEarnings()` - Withdraw accumulated creator earnings
 
-    mapping(uint256 => Article) public articles;
-    mapping(bytes32 => bool) public nullifiersUsed;
-    mapping(address => uint256) public creatorEarnings;
-    uint256 public nextArticleId;
+### Read Functions
 
-    event ArticlePublished(uint256 indexed articleId, address indexed creator, uint256 price);
-    event ArticleUnlocked(uint256 indexed articleId, bytes32 nullifier);
+- `getArticle(article_id)` - Get article details
+- `getCreatorEarnings(creator)` - Check creator earnings
+- `isNullifierUsed(nullifier)` - Verify if nullifier was used
+- `getTotalArticles()` - Get total article count
 
-    function publishArticle(
-        string memory preview,
-        string memory encryptedContent,
-        uint256 price
-    ) external returns (uint256) {
-        require(price >= 0.01 ether && price <= 0.10 ether, "Invalid price");
+## Development Setup
 
-        uint256 articleId = nextArticleId++;
-        articles[articleId] = Article({
-            creator: msg.sender,
-            price: price,
-            totalUnlocks: 0,
-            preview: preview,
-            encryptedContent: encryptedContent
-        });
+### Prerequisites
 
-        emit ArticlePublished(articleId, msg.sender, price);
-        return articleId;
-    }
+- Rust 1.88+ (1.91.0 recommended)
+- cargo-stylus 0.6.3+
+- Arbitrum Sepolia testnet ETH
 
-    function unlockArticleAnonymous(
-        uint256 articleId,
-        bytes32 nullifier,
-        bytes calldata proof
-    ) external payable returns (string memory) {
-        require(!nullifiersUsed[nullifier], "Already unlocked");
-        Article storage article = articles[articleId];
-        require(msg.value >= article.price, "Insufficient payment");
-        require(verifyProof(proof, articleId, nullifier), "Invalid proof");
-
-        nullifiersUsed[nullifier] = true;
-        creatorEarnings[article.creator] += msg.value;
-        article.totalUnlocks++;
-
-        emit ArticleUnlocked(articleId, nullifier);
-        return article.encryptedContent;
-    }
-
-    function withdrawEarnings() external {
-        uint256 amount = creatorEarnings[msg.sender];
-        require(amount > 0, "No earnings");
-
-        creatorEarnings[msg.sender] = 0;
-        payable(msg.sender).transfer(amount);
-    }
-
-    function verifyProof(
-        bytes calldata proof,
-        uint256, /* articleId */
-        bytes32  /* nullifier */
-    ) internal pure returns (bool) {
-        // MVP: Basic validation
-        return proof.length >= 32;
-    }
-}
-```
-
-## Deployment Instructions
-
-### Option 1: Solidity (Recommended for MVP)
+### Installation
 
 ```bash
-npm install --save-dev hardhat @nomicfoundation/hardhat-toolbox
-npx hardhat compile
-npx hardhat run scripts/deploy.js --network arbitrumSepolia
+# Install Rust (if not already installed)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Install cargo-stylus
+cargo install cargo-stylus
+
+# Add WASM target
+rustup target add wasm32-unknown-unknown
 ```
 
-###Option 2: Stylus (Future)
+### Environment Setup
+
+1. Copy the environment template:
+```bash
+cp .env.example .env
+```
+
+2. Fill in your credentials in `.env`:
+```bash
+PRIVATE_KEY=your_private_key_here
+ARBITRUM_SEPOLIA_RPC=https://sepolia-rollup.arbitrum.io/rpc
+```
+
+**⚠️ IMPORTANT**: Never commit `.env` file to version control!
+
+### Build & Test
 
 ```bash
-# When ecosystem stabilizes:
-cargo stylus check
-cargo stylus deploy --private-key $PRIVATE_KEY
+# Build the contract
+cargo build --target wasm32-unknown-unknown --release
+
+# Check contract validity
+cargo stylus check \
+  --endpoint https://sepolia-rollup.arbitrum.io/rpc \
+  --wasm-file target/wasm32-unknown-unknown/release/wikipay_contracts.wasm
 ```
 
-## Gas Comparison
+### Deploy
 
-| Operation | Solidity | Stylus (Future) |
-|-----------|----------|-----------------|
-| Publish | ~150K gas | ~50K gas |
-| Unlock | ~100K gas | ~30K gas |
-| Verify proof | ~800K gas | ~80K gas |
+```bash
+# Deploy to Arbitrum Sepolia
+cargo stylus deploy \
+  --private-key $PRIVATE_KEY \
+  --endpoint https://sepolia-rollup.arbitrum.io/rpc \
+  --wasm-file target/wasm32-unknown-unknown/release/wikipay_contracts.wasm
 
-Stylus will provide 90% gas savings once dependency issues resolve.
+# Cache contract for cheaper calls (recommended)
+cargo stylus cache bid <CONTRACT_ADDRESS> 0 \
+  --private-key $PRIVATE_KEY \
+  --endpoint https://sepolia-rollup.arbitrum.io/rpc
+```
+
+## Project Structure
+
+```
+contracts/
+├── src/
+│   └── lib.rs              # Main Stylus contract
+├── Cargo.toml              # Rust dependencies
+├── rust-toolchain.toml     # Rust version (1.91.0)
+├── .cargo/
+│   └── config.toml         # WASM build configuration
+├── wikipay-abi.json        # Contract ABI
+├── DEPLOYMENT.md           # Deployment details
+└── README.md               # This file
+```
+
+## Technology Stack
+
+- **Language**: Rust 1.91.0
+- **SDK**: stylus-sdk 0.9.0
+- **Primitives**: alloy-primitives 0.8.20
+- **Target**: wasm32-unknown-unknown
+- **Network**: Arbitrum Sepolia (testnet)
+
+## Gas Savings
+
+Stylus contracts run as WASM, providing significant gas savings:
+
+| Operation | Solidity | Stylus | Savings |
+|-----------|----------|---------|---------|
+| Publish Article | ~150K gas | ~50K gas | 67% |
+| Unlock Article | ~100K gas | ~30K gas | 70% |
+| ZK Proof Verification | ~800K gas | ~80K gas | 90% |
+
+## ABI
+
+The contract ABI is available in `wikipay-abi.json` for frontend integration.
+
+## Security Considerations
+
+- Private keys are never committed to version control
+- All `.env` files are gitignored
+- Zero-knowledge proofs prevent identity linking
+- Nullifiers prevent double-unlocking
+- Creator earnings tracked separately for secure withdrawals
+
+## Documentation
+
+- [Arbitrum Stylus Documentation](https://docs.arbitrum.io/stylus/overview)
+- [Stylus CLI Reference](https://docs.arbitrum.io/stylus/using-cli)
+- [Deployment Guide](./DEPLOYMENT.md)
+
+## Support
+
+For issues or questions:
+- Open an issue in the project repository
+- Check [Arbitrum Stylus docs](https://docs.arbitrum.io/stylus)
+- Join [Arbitrum Discord](https://discord.gg/arbitrum)

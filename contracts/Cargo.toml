@@ -21,9 +21,5 @@ lto = true
 panic = "abort"
 opt-level = 3
 
-[[bin]]
-name = "wikipay-contracts"
-path = "src/main.rs"
-
 [lib]
 crate-type = ["lib", "cdylib"]

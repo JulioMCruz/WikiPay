@@ -4,14 +4,14 @@ import { arbitrumSepolia } from 'viem/chains';
 // Contract address from environment
 export const WIKIPAY_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_WIKIPAY_ADDRESS as `0x${string}`;
 
-// Contract ABI (minimal for publish function)
+// Contract ABI (updated for IPFS integration)
 export const WIKIPAY_ABI = [
   {
     type: 'function',
     name: 'publish_article',
     inputs: [
       { name: 'preview', type: 'string' },
-      { name: 'encrypted_content', type: 'string' },
+      { name: 'ipfs_hash', type: 'string' },
       { name: 'price', type: 'uint256' }
     ],
     outputs: [{ name: 'article_id', type: 'uint256' }],
@@ -49,9 +49,9 @@ export const WIKIPAY_ABI = [
   },
   {
     type: 'function',
-    name: 'get_encrypted_content',
+    name: 'get_ipfs_hash',
     inputs: [{ name: 'article_id', type: 'uint256' }],
-    outputs: [{ name: 'content', type: 'string' }],
+    outputs: [{ name: 'ipfs_hash', type: 'string' }],
     stateMutability: 'view'
   }
 ] as const;
@@ -74,45 +74,56 @@ export async function getWalletClient() {
   });
 }
 
-// Helper: Publish article to blockchain
+// Helper: Publish article to blockchain (with IPFS integration)
 export async function publishArticle({
   title,
   preview,
   content,
-  priceUSD
+  priceUSD,
+  ipfsHash
 }: {
   title: string;
   preview: string;
   content: string;
   priceUSD: string;
+  ipfsHash: string; // IPFS CID from Pinata upload
 }) {
   console.log("📝 Publishing article to Stylus contract...");
   console.log("Contract:", WIKIPAY_CONTRACT_ADDRESS);
+  console.log("IPFS Hash:", ipfsHash);
 
   const walletClient = await getWalletClient();
   const [account] = await walletClient.getAddresses();
 
   console.log("Account:", account);
 
-  // For MVP: Store title + content together (in production, encrypt this)
-  const fullContent = `# ${title}\n\n${content}`;
+  // Validate IPFS hash format (CIDv0: Qm..., CIDv1: baf...)
+  if (!ipfsHash.startsWith('Qm') && !ipfsHash.startsWith('baf')) {
+    throw new Error('Invalid IPFS hash format');
+  }
 
-  // Convert USD price to wei (simplified - in production use oracle)
-  // Assuming 1 ETH = $2000 for demo
-  const priceInETH = parseFloat(priceUSD) / 2000;
-  const priceWei = parseEther(priceInETH.toString());
+  // Convert USD price to wei (stored as ETH denomination but represents USD)
+  const priceAsETH = priceUSD;
+  const priceWei = parseEther(priceAsETH);
 
   console.log("Price in USD:", priceUSD);
-  console.log("Price in ETH:", priceInETH);
   console.log("Price in Wei:", priceWei.toString());
 
+  // Contract validates: 0.01 - 0.10 ETH in wei
+  const minPrice = parseEther("0.01"); // Represents $0.01
+  const maxPrice = parseEther("0.10"); // Represents $0.10
+
+  if (priceWei < minPrice || priceWei > maxPrice) {
+    throw new Error(`Price must be between $0.01 and $0.10 USD`);
+  }
+
   try {
-    // Call publish_article on the contract
+    // Call publish_article with IPFS hash (NOT full content)
     const hash = await walletClient.writeContract({
       address: WIKIPAY_CONTRACT_ADDRESS,
       abi: WIKIPAY_ABI,
       functionName: 'publish_article',
-      args: [preview, fullContent, priceWei],
+      args: [preview, ipfsHash, priceWei],
       account
     });
 

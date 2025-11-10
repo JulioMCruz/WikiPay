@@ -62,7 +62,7 @@ export default function Home() {
                 <span className="mr-2">📝</span> Publish Article
               </Button>
             </Link>
-            <Link href="#articles">
+            <Link href="/articles">
               <Button size="lg" variant="outline" className="text-lg px-10 py-7 border-2 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-lg hover:shadow-xl transition-all hover:scale-105 rounded-xl">
                 <span className="mr-2">📖</span> Browse Articles
               </Button>
@@ -249,9 +249,14 @@ export default function Home() {
             Recent Articles
           </h2>
           <p className="text-xl text-slate-600 dark:text-slate-400 mb-8">
-            Connect your wallet to browse and unlock articles
+            Discover premium content with anonymous payments
           </p>
-          <div className="flex justify-center">
+          <div className="flex justify-center gap-4">
+            <Link href="/articles">
+              <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xl">
+                <span className="mr-2">📖</span> View All Articles
+              </Button>
+            </Link>
             <div className="inline-block p-1 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-500 shadow-xl">
               <div className="bg-white dark:bg-slate-950 rounded-xl p-2">
                 <ConnectButton />

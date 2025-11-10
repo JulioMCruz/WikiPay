@@ -3,226 +3,170 @@ pragma solidity ^0.8.20;
 
 /**
  * @title WikiPay
- * @notice Anonymous article payments using zero-knowledge proofs
- * @dev Simplified ZK verification for MVP - will upgrade to full Plonky2 verification
+ * @notice Decentralized article publishing platform with IPFS storage
+ * @dev Stores minimal on-chain data, full articles stored on IPFS
  */
 contract WikiPay {
+    // Article structure
     struct Article {
-        address creator;
-        uint256 price;
-        uint256 totalUnlocks;
-        string preview;
-        string encryptedContent;
+        string ipfsHash;    // CIDv0 (Qm...) or CIDv1 (baf...)
+        string preview;     // Short preview text
+        uint256 price;      // Price in wei
+        address creator;    // Article creator
+        uint256 unlocks;    // Number of times unlocked
+        uint256 timestamp;  // Creation timestamp
     }
 
-    // State
+    // State variables
     mapping(uint256 => Article) public articles;
-    mapping(bytes32 => bool) public nullifiersUsed;
     mapping(address => uint256) public creatorEarnings;
-    uint256 public nextArticleId;
-
-    // Constants
-    uint256 public constant MIN_PRICE = 0.01 ether;
-    uint256 public constant MAX_PRICE = 0.10 ether;
+    uint256 public totalArticles;
 
     // Events
     event ArticlePublished(
         uint256 indexed articleId,
         address indexed creator,
-        uint256 price
+        string ipfsHash,
+        uint256 price,
+        uint256 timestamp
     );
+
     event ArticleUnlocked(
         uint256 indexed articleId,
-        bytes32 indexed nullifier
-    );
-    event EarningsWithdrawn(
-        address indexed creator,
-        uint256 amount
+        address indexed reader,
+        uint256 price,
+        uint256 timestamp
     );
 
     /**
      * @notice Publish a new article
-     * @param preview First 200 words (public preview)
-     * @param encryptedContent Full article content (encrypted)
-     * @param price Payment required to unlock (0.01-0.10 ETH)
+     * @param ipfsHash IPFS hash (CIDv0 or CIDv1)
+     * @param preview Short preview text
+     * @param price Price in wei to unlock full article
      * @return articleId The ID of the published article
      */
     function publishArticle(
-        string memory preview,
-        string memory encryptedContent,
+        string calldata ipfsHash,
+        string calldata preview,
         uint256 price
     ) external returns (uint256) {
-        require(
-            price >= MIN_PRICE && price <= MAX_PRICE,
-            "Price must be between 0.01 and 0.10 ETH"
-        );
+        require(bytes(ipfsHash).length > 0, "IPFS hash required");
+        require(bytes(preview).length > 0, "Preview required");
+        require(price > 0, "Price must be greater than 0");
 
-        uint256 articleId = nextArticleId++;
+        uint256 articleId = totalArticles;
 
         articles[articleId] = Article({
-            creator: msg.sender,
-            price: price,
-            totalUnlocks: 0,
+            ipfsHash: ipfsHash,
             preview: preview,
-            encryptedContent: encryptedContent
+            price: price,
+            creator: msg.sender,
+            unlocks: 0,
+            timestamp: block.timestamp
         });
 
-        emit ArticlePublished(articleId, msg.sender, price);
+        totalArticles++;
+
+        emit ArticlePublished(
+            articleId,
+            msg.sender,
+            ipfsHash,
+            price,
+            block.timestamp
+        );
+
         return articleId;
     }
 
     /**
-     * @notice Unlock article anonymously using ZK proof
-     * @param articleId Article to unlock
-     * @param nullifier Unique nullifier (prevents double-spend)
-     * @param proof Zero-knowledge proof bytes
-     * @return encryptedContent The encrypted full article content
+     * @notice Unlock an article by paying the price
+     * @param articleId The ID of the article to unlock
      */
-    function unlockArticleAnonymous(
-        uint256 articleId,
-        bytes32 nullifier,
-        bytes calldata proof
-    ) external payable returns (string memory) {
-        // Check nullifier not already used
-        require(
-            !nullifiersUsed[nullifier],
-            "Nullifier already used (article already unlocked)"
-        );
+    function unlockArticle(uint256 articleId) external payable {
+        require(articleId < totalArticles, "Article does not exist");
 
-        // Get article
         Article storage article = articles[articleId];
-        require(article.creator != address(0), "Article does not exist");
+        require(msg.value >= article.price, "Insufficient payment");
 
-        // Check payment
-        require(
-            msg.value >= article.price,
-            "Insufficient payment"
-        );
-
-        // Verify ZK proof
-        require(
-            verifyPaymentProof(proof, articleId, nullifier),
-            "Invalid zero-knowledge proof"
-        );
-
-        // Mark nullifier as used
-        nullifiersUsed[nullifier] = true;
-
-        // Add payment to creator earnings
+        // Transfer payment to creator
         creatorEarnings[article.creator] += msg.value;
+        article.unlocks++;
 
-        // Increment unlock count
-        article.totalUnlocks++;
-
-        emit ArticleUnlocked(articleId, nullifier);
-
-        // Return encrypted content (frontend decrypts client-side)
-        return article.encryptedContent;
+        emit ArticleUnlocked(
+            articleId,
+            msg.sender,
+            msg.value,
+            block.timestamp
+        );
     }
 
     /**
-     * @notice Withdraw creator earnings
-     * @return amount The amount withdrawn
+     * @notice Withdraw earnings for creators
      */
-    function withdrawEarnings() external returns (uint256) {
-        uint256 amount = creatorEarnings[msg.sender];
-        require(amount > 0, "No earnings to withdraw");
+    function withdrawEarnings() external {
+        uint256 earnings = creatorEarnings[msg.sender];
+        require(earnings > 0, "No earnings to withdraw");
 
-        // Reset earnings before transfer (reentrancy protection)
         creatorEarnings[msg.sender] = 0;
 
-        // Transfer earnings to creator
-        (bool success, ) = payable(msg.sender).call{value: amount}("");
+        (bool success, ) = payable(msg.sender).call{value: earnings}("");
         require(success, "Transfer failed");
-
-        emit EarningsWithdrawn(msg.sender, amount);
-        return amount;
     }
-
-    // === View Functions ===
 
     /**
      * @notice Get article details
-     * @param articleId Article ID
-     * @return creator Article creator address
-     * @return price Unlock price
-     * @return totalUnlocks Total number of unlocks
-     * @return preview Article preview text
+     * @param articleId The ID of the article
+     * @return Article struct with all details
      */
-    function getArticle(uint256 articleId)
-        external
-        view
-        returns (
-            address creator,
-            uint256 price,
-            uint256 totalUnlocks,
-            string memory preview
-        )
-    {
-        Article storage article = articles[articleId];
-        return (
-            article.creator,
-            article.price,
-            article.totalUnlocks,
-            article.preview
-        );
+    function getArticle(uint256 articleId) external view returns (Article memory) {
+        require(articleId < totalArticles, "Article does not exist");
+        return articles[articleId];
     }
 
     /**
-     * @notice Get creator's total earnings
-     * @param creator Creator address
-     * @return earnings Total earnings in wei
+     * @notice Get total number of articles
+     * @return Total articles published
+     */
+    function getTotalArticles() external view returns (uint256) {
+        return totalArticles;
+    }
+
+    /**
+     * @notice Get IPFS hash for an article
+     * @param articleId The ID of the article
+     * @return IPFS hash string
+     */
+    function getIpfsHash(uint256 articleId) external view returns (string memory) {
+        require(articleId < totalArticles, "Article does not exist");
+        return articles[articleId].ipfsHash;
+    }
+
+    /**
+     * @notice Get preview for an article
+     * @param articleId The ID of the article
+     * @return Preview text
+     */
+    function getPreview(uint256 articleId) external view returns (string memory) {
+        require(articleId < totalArticles, "Article does not exist");
+        return articles[articleId].preview;
+    }
+
+    /**
+     * @notice Get price for an article
+     * @param articleId The ID of the article
+     * @return Price in wei
+     */
+    function getPrice(uint256 articleId) external view returns (uint256) {
+        require(articleId < totalArticles, "Article does not exist");
+        return articles[articleId].price;
+    }
+
+    /**
+     * @notice Get creator earnings
+     * @param creator The creator address
+     * @return Earnings in wei
      */
     function getCreatorEarnings(address creator) external view returns (uint256) {
         return creatorEarnings[creator];
-    }
-
-    /**
-     * @notice Check if nullifier has been used
-     * @param nullifier Nullifier to check
-     * @return used True if nullifier has been used
-     */
-    function isNullifierUsed(bytes32 nullifier) external view returns (bool) {
-        return nullifiersUsed[nullifier];
-    }
-
-    /**
-     * @notice Get total number of articles published
-     * @return total Total articles
-     */
-    function getTotalArticles() external view returns (uint256) {
-        return nextArticleId;
-    }
-
-    // === Internal Functions ===
-
-    /**
-     * @notice Verify zero-knowledge payment proof
-     * @dev MVP: Simplified validation. Will upgrade to full Plonky2 verification
-     * @param proof Proof bytes
-     * @param articleId Article being unlocked
-     * @param nullifier Payment nullifier
-     * @return valid True if proof is valid
-     */
-    function verifyPaymentProof(
-        bytes calldata proof,
-        uint256 articleId,
-        bytes32 nullifier
-    ) internal pure returns (bool) {
-        // MVP: Basic structure validation
-        // Minimum proof size check
-        if (proof.length < 32) {
-            return false;
-        }
-
-        // TODO: Implement full Plonky2 proof verification
-        // For MVP, we accept properly formatted proofs
-        // Frontend generates valid proofs, contract validates structure
-
-        // Prevent compiler warnings
-        articleId;
-        nullifier;
-
-        return true;
     }
 }

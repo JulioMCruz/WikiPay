@@ -204,8 +204,8 @@ The multi-chain future is inevitable. EIP-8004 offers a path toward secure, inte
   },
   quickTest: {
     title: "Quick Test Article: Hello Web3",
-    preview: "This is a short test article to verify the WikiPay publishing system. It demonstrates the anonymous payment flow and content unlocking mechanism.",
-    content: `This is a test article for the WikiPay anonymous payment system.
+    preview: "This is a short test article to verify the zkWiki publishing system. It demonstrates the anonymous payment flow and content unlocking mechanism.",
+    content: `This is a test article for the zkWiki anonymous payment system.
 
 ## Purpose
 
@@ -228,7 +228,7 @@ Testing the following features:
 - Complete anonymity
 - Powered by Arbitrum Stylus
 
-Thank you for testing WikiPay! 🚀`,
+Thank you for testing zkWiki! 🚀`,
     price: "0.01"
   }
 };
@@ -348,8 +348,8 @@ export default function PublishPage() {
               <span className="text-xl">🔒</span>
             </div>
             <div>
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">WikiPay</span>
-              <Badge variant="secondary" className="ml-2 text-xs">Anonymous</Badge>
+              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">zkWiki</span>
+              <Badge variant="secondary" className="ml-2 text-xs">Zero-Knowledge</Badge>
             </div>
           </Link>
           <div className="flex gap-2 items-center">

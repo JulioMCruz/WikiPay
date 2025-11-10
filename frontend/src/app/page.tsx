@@ -15,8 +15,8 @@ export default function Home() {
               <span className="text-xl">🔒</span>
             </div>
             <div>
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">WikiPay</span>
-              <Badge variant="secondary" className="ml-2 text-xs">Anonymous</Badge>
+              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">zkWiki</span>
+              <Badge variant="secondary" className="ml-2 text-xs">Zero-Knowledge</Badge>
             </div>
           </div>
           <div className="flex gap-2 items-center">
@@ -274,7 +274,7 @@ export default function Home() {
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg">
                 <span className="text-2xl">🔒</span>
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">WikiPay</span>
+              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">zkWiki</span>
             </div>
             <p className="text-lg text-slate-700 dark:text-slate-300 mb-2">
               Built with ❤️ for anonymous content creators

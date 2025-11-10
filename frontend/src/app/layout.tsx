@@ -15,8 +15,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "WikiPay Anonymous - Zero-Knowledge Content Payments",
-  description: "Pay for articles anonymously using zkSNARKs on Arbitrum. $0.01-0.10 per article with complete privacy.",
+  title: "zkWiki - Zero-Knowledge Anonymous Content Platform",
+  description: "Unlock premium content anonymously using zero-knowledge proofs. $0.01-0.10 per article with complete privacy on Arbitrum.",
 };
 
 export default function RootLayout({

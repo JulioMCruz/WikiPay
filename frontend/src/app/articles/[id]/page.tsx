@@ -261,8 +261,8 @@ export default function ArticlePage() {
               <span className="text-xl">🔒</span>
             </div>
             <div>
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">WikiPay</span>
-              <Badge variant="secondary" className="ml-2 text-xs">Anonymous</Badge>
+              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">zkWiki</span>
+              <Badge variant="secondary" className="ml-2 text-xs">Zero-Knowledge</Badge>
             </div>
           </Link>
           <div className="flex gap-2 items-center">

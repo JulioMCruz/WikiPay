@@ -427,36 +427,138 @@ const handleUnlock = async () => {
 
 ---
 
-## ✅ Deliverables Checklist
+## ✅ Current Implementation Status
 
-After 8 hours, you will have:
-
-### Smart Contracts
+### Smart Contracts ✅ COMPLETED
 - [x] Arbitrum Stylus contract deployed (Rust)
 - [x] Article storage + nullifier tracking
-- [x] ZK proof verifier
+- [x] Simplified proof verifier (MVP version)
 - [x] Creator earnings system
-- [x] Deployed to Arbitrum Sepolia
+- [x] Deployed to Arbitrum Sepolia (v3: 0xab60b91ecb1281Ff9B53A9a3FBBfe8C93afB72b3)
+- [x] Contract debugging and fixes (Vec<u8> → FixedBytes<32>)
+- [x] Contract ABI exported and integrated
 
-### ZK Circuits
-- [x] Plonky2 payment circuit (Rust)
-- [x] WASM build for frontend
-- [x] Proof generation <2 seconds
-- [x] Anonymity guarantee (no wallet linkage)
+**Current Status**: Contract v3 is deployed and working on Arbitrum Sepolia testnet.
 
-### Frontend
-- [x] Next.js 14 + App Router
-- [x] Tailwind + shadcn/ui
+### ZK Circuits 🔄 IN PROGRESS (SIMPLIFIED MVP)
+- [x] Plonky2 dependencies configured
+- [x] Basic circuit structure implemented
+- [ ] Full Plonky2 payment circuit (deferred to v2)
+- [ ] WASM build for frontend
+- [x] **MVP Approach**: Using FixedBytes<32> proofs (simplified verification)
+- [x] Nullifier generation working
+
+**Current Status**: Using simplified proof verification for MVP. Full Plonky2 integration planned for v2.
+
+### Frontend ✅ COMPLETED (MVP)
+- [x] Next.js 14 + App Router setup
+- [x] Tailwind CSS v3 configured (fixed version conflicts)
+- [x] shadcn/ui components integrated
+- [x] Modern UI with glassmorphism and gradients
 - [x] Wagmi + RainbowKit wallet connection
-- [x] ZK proof generation in browser
-- [x] Article publish/unlock flow
-- [x] Creator dashboard
+- [x] Contract integration (contracts.ts with correct ABI)
+- [x] Article publish flow UI
+- [x] Article unlock flow UI
+- [x] Creator dashboard UI
+- [x] Environment variables configured
+- [x] Build process working (PostCSS fixed)
+- [x] v0 MCP server integrated for design assistance
 
-### Documentation
-- [x] Complete README
-- [x] Deployment guide
-- [x] API documentation
-- [x] Architecture diagrams
+**Current Status**: Frontend is complete with modern UI. Contract integration ready. Pending full ZK proof implementation.
+
+### Documentation 🔄 IN PROGRESS
+- [x] Implementation plan
+- [x] Contract deployment guide
+- [ ] Frontend setup guide
+- [ ] API documentation
+- [ ] Architecture diagrams
+- [x] .env.example files
+
+**Current Status**: Core documentation complete. Need to add architecture diagrams and API docs.
+
+---
+
+## 🔧 Recent Updates & Fixes
+
+### Session 1: Contract Debugging & Deployment (Nov 9, 2025)
+**Issues Fixed**:
+- ❌ Contract v1-v2 failed with `Vec<u8>` type incompatibility in Stylus
+- ✅ Changed proof parameter from `Vec<u8>` to `FixedBytes<32>`
+- ✅ Updated return type from `Result<String>` to `Result<bool>`
+- ✅ Deployed working contract v3 to Arbitrum Sepolia
+- ✅ Contract address: `0xab60b91ecb1281Ff9B53A9a3FBBfe8C93afB72b3`
+
+### Session 2: Frontend Integration (Nov 9, 2025)
+**Tasks Completed**:
+- ✅ Updated `.env.local` with new contract address
+- ✅ Updated `contracts.ts` ABI to match v3 contract
+- ✅ Fixed Tailwind CSS v3/v4 version conflict
+- ✅ Removed `@tailwindcss/postcss` (v4) package
+- ✅ Fixed `postcss.config.mjs` to use Tailwind v3
+- ✅ Added missing `utils.ts` for shadcn/ui
+- ✅ Implemented modern UI with glassmorphism and gradients
+- ✅ Integrated v0 MCP server for design assistance
+- ✅ Fixed build errors (ESLint, PostCSS, CSS variables)
+
+**Technical Details**:
+- **PostCSS Fix**: Changed from `'@tailwindcss/postcss': {}` to `tailwindcss: {}, autoprefixer: {}`
+- **CSS Variables**: Added complete shadcn/ui HSL color system
+- **Component Updates**: Hero section, feature cards, how-it-works sections
+- **Styling Approach**: Modern Tailwind with backdrop-blur, gradients, shadows, transitions
+
+### Session 3: UI Design Polish (Nov 9, 2025)
+**Design System**:
+- 🎨 Glassmorphism effects with `backdrop-blur-xl`
+- 🎨 Gradient backgrounds: `from-blue-600 via-purple-600 to-pink-600`
+- 🎨 Decorative blur circles for depth
+- 🎨 Group hover effects with scale transitions
+- 🎨 Modern spacing and typography
+- 🎨 Dark mode support with HSL variables
+- 🎨 Responsive design (mobile-first)
+
+**Tools Configured**:
+- ✅ v0 MCP server added globally to Claude Code
+- ✅ API Key: `v1:WTCRo46oboJ4Yn1XdpyY0uQw:j4m6MrMlyYWx8Mt7UYGe1QkN`
+- ✅ Available for design improvements and component generation
+
+---
+
+## 🎯 Next Steps (Immediate)
+
+### Phase 1: Complete Frontend Testing ⏱️ 1-2 hours
+**Priority: HIGH**
+- [ ] Hard refresh browser to verify Tailwind styles working
+- [ ] Test wallet connection (RainbowKit)
+- [ ] Test article publish flow
+- [ ] Test article unlock flow with simplified proofs
+- [ ] Verify contract interaction (read/write operations)
+
+### Phase 2: Full ZK Integration ⏱️ 3-4 hours
+**Priority: MEDIUM**
+- [ ] Complete Plonky2 circuit implementation
+- [ ] Build WASM module for frontend
+- [ ] Integrate proof generation in unlock flow
+- [ ] Replace FixedBytes<32> with real ZK proofs
+- [ ] Test end-to-end anonymous payments
+
+### Phase 3: Production Readiness ⏱️ 2-3 hours
+**Priority: MEDIUM**
+- [ ] Add error handling and user feedback
+- [ ] Implement loading states and progress indicators
+- [ ] Add transaction monitoring and confirmations
+- [ ] Create comprehensive testing suite
+- [ ] Write API documentation
+- [ ] Create architecture diagrams
+- [ ] Deploy to Vercel/production
+
+### Phase 4: Advanced Features ⏱️ 4-6 hours
+**Priority: LOW (Post-MVP)**
+- [ ] IPFS integration for encrypted content storage
+- [ ] Multi-language support
+- [ ] Advanced analytics dashboard
+- [ ] Creator verification system
+- [ ] Social sharing features
+- [ ] Mobile optimization
 
 ---
 
@@ -563,6 +665,105 @@ npm run lint                    # Check code quality
 
 ---
 
+## 🐛 Troubleshooting Guide
+
+### Common Issues & Solutions
+
+#### 1. Tailwind Styles Not Applying
+**Symptom**: Page appears completely unstyled, plain HTML only.
+
+**Root Cause**: Tailwind CSS v3/v4 version conflict. Both `@tailwindcss/postcss` (v4) and `tailwindcss` (v3) were installed.
+
+**Solution**:
+```bash
+# 1. Remove conflicting package
+npm uninstall @tailwindcss/postcss
+
+# 2. Update postcss.config.mjs
+# Change from: '@tailwindcss/postcss': {}
+# To: tailwindcss: {}, autoprefixer: {}
+
+# 3. Restart dev server
+npm run dev
+
+# 4. Hard refresh browser (Cmd+Shift+R or Ctrl+Shift+R)
+```
+
+#### 2. Contract Deployment Fails with Type Error
+**Symptom**: `Vec<u8>` type not supported in Stylus external functions.
+
+**Root Cause**: Stylus doesn't support `Vec<u8>` in external function signatures.
+
+**Solution**:
+```rust
+// ❌ Wrong (will fail)
+pub fn unlock_article(proof: Vec<u8>) -> Result<String>
+
+// ✅ Correct
+pub fn unlock_article(proof: FixedBytes<32>) -> Result<bool>
+```
+
+#### 3. Build Error: "Unknown utility class 'border-border'"
+**Symptom**: Build fails with unknown Tailwind utility class.
+
+**Root Cause**: Using `@apply border-border` without proper CSS variable setup.
+
+**Solution**:
+```css
+/* ❌ Wrong */
+* {
+  @apply border-border;
+}
+
+/* ✅ Correct */
+* {
+  border-color: hsl(var(--border));
+}
+```
+
+#### 4. Missing shadcn/ui Utils
+**Symptom**: Build error "Cannot resolve '@/lib/utils'".
+
+**Root Cause**: Missing utility file for shadcn/ui components.
+
+**Solution**: Create `src/lib/utils.ts`:
+```typescript
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+```
+
+#### 5. v0 MCP Server Not Available
+**Symptom**: v0 tools not showing in Claude Code.
+
+**Root Cause**: MCP server not configured in Claude Code.
+
+**Solution**:
+```bash
+# Add v0 MCP server globally
+claude mcp add --scope user v0 npx mcp-remote https://mcp.v0.dev -H "Authorization: Bearer YOUR_API_KEY"
+
+# Verify configuration
+grep -A 10 '"v0"' ~/.claude.json
+```
+
+#### 6. Port 3000 Already in Use
+**Symptom**: "Port 3000 is already in use" error.
+
+**Solution**:
+```bash
+# Kill process on port 3000
+lsof -ti:3000 | xargs kill -9
+
+# Or use alternative port
+npm run dev -- -p 3001
+```
+
+---
+
 ## ❓ FAQ
 
 **Q: Why Arbitrum Stylus instead of regular Arbitrum?**
@@ -579,6 +780,9 @@ A: Your reading history is tied to the wallet. Unlocked articles are stored off-
 
 **Q: How does the creator get paid?**
 A: Creator address is public. Payment goes directly to them (70%). No intermediary custody.
+
+**Q: Why is the UI completely unstyled?**
+A: This was caused by a Tailwind CSS v3/v4 version conflict. The fix is documented in the troubleshooting guide above.
 
 ---
 

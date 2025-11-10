@@ -1,10 +1,52 @@
-import { createPublicClient, createWalletClient, custom, http, parseEther } from 'viem';
-import { arbitrumSepolia } from 'viem/chains';
+import { createPublicClient, createWalletClient, custom, http, parseUnits } from 'viem';
+import { arbitrum } from 'viem/chains';
 
-// Contract address from environment
+// Contract addresses from environment
 export const WIKIPAY_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_WIKIPAY_ADDRESS as `0x${string}`;
+export const USDC_ADDRESS = process.env.NEXT_PUBLIC_USDC_ADDRESS as `0x${string}`;
 
-// Contract ABI (Solidity version with ZK proof support)
+// USDC has 6 decimals (not 18 like ETH)
+export const USDC_DECIMALS = 6;
+
+// EIP-3009 Interface for Circle USDC
+export const USDC_ABI = [
+  {
+    type: 'function',
+    name: 'transferWithAuthorization',
+    inputs: [
+      { name: 'from', type: 'address' },
+      { name: 'to', type: 'address' },
+      { name: 'value', type: 'uint256' },
+      { name: 'validAfter', type: 'uint256' },
+      { name: 'validBefore', type: 'uint256' },
+      { name: 'nonce', type: 'bytes32' },
+      { name: 'v', type: 'uint8' },
+      { name: 'r', type: 'bytes32' },
+      { name: 's', type: 'bytes32' }
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable'
+  },
+  {
+    type: 'function',
+    name: 'balanceOf',
+    inputs: [{ name: 'account', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'allowance',
+    inputs: [
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' }
+    ],
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view'
+  }
+] as const;
+
+// WikiPayX402 Contract ABI (x402 protocol with USDC)
 export const WIKIPAY_ABI = [
   {
     type: 'function',
@@ -46,14 +88,38 @@ export const WIKIPAY_ABI = [
   },
   {
     type: 'function',
-    name: 'unlockArticleAnonymous',
+    name: 'unlockArticleX402',
     inputs: [
       { name: 'articleId', type: 'uint256' },
       { name: 'nullifier', type: 'bytes32' },
-      { name: 'proof', type: 'bytes32' }
+      { name: 'proof', type: 'bytes32' },
+      { name: 'from', type: 'address' },
+      { name: 'validAfter', type: 'uint256' },
+      { name: 'validBefore', type: 'uint256' },
+      { name: 'nonce', type: 'bytes32' },
+      { name: 'v', type: 'uint8' },
+      { name: 'r', type: 'bytes32' },
+      { name: 's', type: 'bytes32' }
     ],
     outputs: [{ name: '', type: 'bool' }],
-    stateMutability: 'payable'
+    stateMutability: 'nonpayable'
+  },
+  {
+    type: 'function',
+    name: 'getUSDCAddress',
+    inputs: [],
+    outputs: [{ name: '', type: 'address' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'getPriceFormatted',
+    inputs: [{ name: 'articleId', type: 'uint256' }],
+    outputs: [
+      { name: 'rawPrice', type: 'uint256' },
+      { name: 'formattedPrice', type: 'string' }
+    ],
+    stateMutability: 'view'
   },
   {
     type: 'function',
@@ -78,9 +144,9 @@ export const WIKIPAY_ABI = [
   }
 ] as const;
 
-// Create public client for reading
+// Create public client for reading (Arbitrum One mainnet)
 export const publicClient = createPublicClient({
-  chain: arbitrumSepolia,
+  chain: arbitrum,
   transport: http()
 });
 
@@ -91,7 +157,7 @@ export async function getWalletClient() {
   }
 
   return createWalletClient({
-    chain: arbitrumSepolia,
+    chain: arbitrum,
     transport: custom(window.ethereum)
   });
 }
@@ -124,28 +190,28 @@ export async function publishArticle({
     throw new Error('Invalid IPFS hash format');
   }
 
-  // Convert USD price to wei (stored as ETH denomination but represents USD)
-  const priceAsETH = priceUSD;
-  const priceWei = parseEther(priceAsETH);
+  // Convert USD price to USDC tokens (6 decimals)
+  // Example: "0.01" → 10000 USDC tokens
+  const priceUSDC = parseUnits(priceUSD, USDC_DECIMALS);
 
   console.log("Price in USD:", priceUSD);
-  console.log("Price in Wei:", priceWei.toString());
+  console.log("Price in USDC tokens:", priceUSDC.toString());
 
-  // Contract validates: 0.01 - 0.10 ETH in wei
-  const minPrice = parseEther("0.01"); // Represents $0.01
-  const maxPrice = parseEther("0.10"); // Represents $0.10
+  // Contract validates: 10000 - 100000 USDC tokens ($0.01 - $0.10)
+  const minPrice = parseUnits("0.01", USDC_DECIMALS); // 10000 tokens = $0.01
+  const maxPrice = parseUnits("0.10", USDC_DECIMALS); // 100000 tokens = $0.10
 
-  if (priceWei < minPrice || priceWei > maxPrice) {
+  if (priceUSDC < minPrice || priceUSDC > maxPrice) {
     throw new Error(`Price must be between $0.01 and $0.10 USD`);
   }
 
   try {
-    // Call publishArticle with IPFS hash (NOT full content)
+    // Call publishArticle with IPFS hash and USDC price
     const hash = await walletClient.writeContract({
       address: WIKIPAY_CONTRACT_ADDRESS,
       abi: WIKIPAY_ABI,
       functionName: 'publishArticle',
-      args: [ipfsHash, preview, priceWei],
+      args: [ipfsHash, preview, priceUSDC],
       account
     });
 
@@ -265,14 +331,75 @@ export async function checkIfUnlocked(articleId: bigint): Promise<boolean> {
   }
 }
 
-// Helper: Unlock article anonymously with ZK proof
+// Helper: Generate EIP-3009 transfer authorization signature
+export async function generateTransferAuthorization(
+  from: `0x${string}`,
+  to: `0x${string}`,
+  value: bigint,
+  validAfter: bigint,
+  validBefore: bigint,
+  nonce: `0x${string}`
+) {
+  const walletClient = await getWalletClient();
+
+  // EIP-712 domain for Circle USDC on Arbitrum One
+  const domain = {
+    name: 'USD Coin',
+    version: '2',
+    chainId: 42161,
+    verifyingContract: USDC_ADDRESS
+  } as const;
+
+  // EIP-712 types for transferWithAuthorization
+  const types = {
+    TransferWithAuthorization: [
+      { name: 'from', type: 'address' },
+      { name: 'to', type: 'address' },
+      { name: 'value', type: 'uint256' },
+      { name: 'validAfter', type: 'uint256' },
+      { name: 'validBefore', type: 'uint256' },
+      { name: 'nonce', type: 'bytes32' }
+    ]
+  } as const;
+
+  const message = {
+    from,
+    to,
+    value,
+    validAfter,
+    validBefore,
+    nonce
+  };
+
+  // Sign EIP-712 typed data
+  const signature = await walletClient.signTypedData({
+    account: from,
+    domain,
+    types,
+    primaryType: 'TransferWithAuthorization',
+    message
+  });
+
+  // Split signature into v, r, s components
+  const r = `0x${signature.slice(2, 66)}` as `0x${string}`;
+  const s = `0x${signature.slice(66, 130)}` as `0x${string}`;
+  const v = parseInt(signature.slice(130, 132), 16);
+
+  return { v, r, s, signature };
+}
+
+// Helper: Unlock article with USDC using EIP-3009 (x402 protocol)
 export async function unlockArticle(articleId: bigint, price: bigint) {
-  console.log("🔓 Unlocking article anonymously...");
+  console.log("🔓 Unlocking article with USDC (x402 protocol)...");
   console.log("Article ID:", articleId);
-  console.log("Price:", price.toString());
+  console.log("Price (USDC tokens):", price.toString());
 
   const walletClient = await getWalletClient();
   const [account] = await walletClient.getAddresses();
+
+  // Get article creator address
+  const article = await getArticle(articleId);
+  const creator = article.creator as `0x${string}`;
 
   // Generate deterministic ZK proof and nullifier
   const { nullifier, proof } = await generateZkProof(articleId);
@@ -280,15 +407,35 @@ export async function unlockArticle(articleId: bigint, price: bigint) {
   console.log("Generated nullifier:", nullifier);
   console.log("Generated proof:", proof);
 
+  // Generate unique nonce for EIP-3009 (using nullifier ensures uniqueness)
+  const nonce = nullifier;
+
+  // Set validity window (current time to 1 hour from now)
+  const validAfter = BigInt(Math.floor(Date.now() / 1000));
+  const validBefore = validAfter + BigInt(3600); // 1 hour validity
+
+  console.log("Generating EIP-3009 authorization...");
+
+  // Generate EIP-3009 transfer authorization signature
+  const { v, r, s } = await generateTransferAuthorization(
+    account,
+    creator,
+    price,
+    validAfter,
+    validBefore,
+    nonce
+  );
+
+  console.log("Authorization signed (gasless USDC payment)");
+
   try {
-    // Call unlockArticleAnonymous with payment
+    // Call unlockArticleX402 with EIP-3009 authorization
     const hash = await walletClient.writeContract({
       address: WIKIPAY_CONTRACT_ADDRESS,
       abi: WIKIPAY_ABI,
-      functionName: 'unlockArticleAnonymous',
-      args: [articleId, nullifier, proof],
-      account,
-      value: price // Send payment
+      functionName: 'unlockArticleX402',
+      args: [articleId, nullifier, proof, account, validAfter, validBefore, nonce, v, r, s],
+      account
     });
 
     console.log("✅ Transaction sent:", hash);
@@ -297,7 +444,7 @@ export async function unlockArticle(articleId: bigint, price: bigint) {
     // Wait for transaction to be mined
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
 
-    console.log("🎉 Article unlocked!");
+    console.log("🎉 Article unlocked via x402 protocol!");
     console.log("Block:", receipt.blockNumber);
     console.log("Gas used:", receipt.gasUsed.toString());
 

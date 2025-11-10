@@ -1,0 +1,11 @@
+{
+  "contract": "WikiPayX402",
+  "address": "0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e",
+  "network": "Arbitrum One",
+  "chainId": 42161,
+  "usdc": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+  "protocol": "x402",
+  "deployer": "0xBD730613339499c114d12Eb41dcE3321376b90e5",
+  "timestamp": "2025-11-10T07:39:55.475Z",
+  "blockNumber": 398713371
+}

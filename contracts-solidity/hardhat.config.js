@@ -22,8 +22,10 @@ module.exports = {
       url: process.env.ARBITRUM_ONE_RPC || "https://arb1.arbitrum.io/rpc",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       chainId: 42161,
+      gasPrice: 100000000, // 0.1 gwei (Arbitrum One typical)
     },
   },
+  defaultNetwork: "arbitrumOne",
   etherscan: {
     apiKey: process.env.ARBISCAN_API_KEY || "",
   },

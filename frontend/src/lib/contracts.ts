@@ -74,8 +74,8 @@ export const WIKIPAY_ABI = [
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "bytes32", "name": "nullifier", "type": "bytes32" }],
-    "name": "isNullifierUsed",
+    "inputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
+    "name": "nullifiersUsed",
     "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
     "stateMutability": "view",
     "type": "function"

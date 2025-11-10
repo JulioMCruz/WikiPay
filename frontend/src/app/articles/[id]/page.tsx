@@ -19,7 +19,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { getArticle, checkIfUnlocked, generateZkProof, generateTransferAuthorization, getWalletClient } from "@/lib/contract";
 import { simpleDecrypt } from "@/lib/encryption";
 import { useAccount } from "wagmi";
-import { formatEther } from "viem";
+import { formatEther, keccak256, toBytes } from "viem";
 
 export default function ArticlePage() {
   const params = useParams();
@@ -150,7 +150,11 @@ export default function ArticlePage() {
 
       const validAfter = BigInt(Math.floor(Date.now() / 1000));
       const validBefore = validAfter + BigInt(3600); // 1 hour validity
-      const nonce = nullifier;
+
+      // Generate unique nonce (nullifier + timestamp) to prevent reuse
+      const timestamp = BigInt(Math.floor(Date.now() / 1000));
+      const nonceData = `${nullifier}${timestamp.toString()}`;
+      const nonce = keccak256(toBytes(nonceData)) as `0x${string}`;
 
       const { v, r, s, signature } = await generateTransferAuthorization(
         account,
@@ -220,6 +224,10 @@ export default function ArticlePage() {
       }
 
       setPaymentStep("🎉 Content unlocked successfully!");
+
+      // Unlock is automatically stored server-side in database
+      // No client-side storage needed - works across devices/browsers
+
       setUnlockResult({
         transactionHash: data.payment.transactionHash,
         blockNumber: data.payment.blockNumber,

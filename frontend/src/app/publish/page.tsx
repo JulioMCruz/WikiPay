@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { publishArticle } from "@/lib/contract";
+import { useAccount } from "wagmi";
 
 const exampleArticles = {
   x402: {
@@ -107,11 +109,13 @@ Thank you for testing WikiPay! 🚀`,
 };
 
 export default function PublishPage() {
+  const { address, isConnected } = useAccount();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [preview, setPreview] = useState("");
   const [price, setPrice] = useState("0.05");
   const [isPublishing, setIsPublishing] = useState(false);
+  const [publishResult, setPublishResult] = useState<any>(null);
 
   const loadExample = (exampleKey: keyof typeof exampleArticles) => {
     const example = exampleArticles[exampleKey];
@@ -128,26 +132,39 @@ export default function PublishPage() {
     console.log("Content length:", content.length);
     console.log("Price:", price);
 
+    // Check wallet connection
+    if (!isConnected) {
+      alert("Please connect your wallet first!");
+      return;
+    }
+
     try {
       setIsPublishing(true);
+      setPublishResult(null);
       console.log("📝 Publishing state set to true");
 
-      // TODO: Implement blockchain publish logic
-      console.log("⏳ Simulating blockchain transaction...");
+      // Call real blockchain publish function
+      console.log("📡 Publishing to Arbitrum Stylus contract...");
 
-      await new Promise((resolve) => {
-        setTimeout(() => {
-          console.log("✅ Blockchain transaction simulated");
-          resolve(undefined);
-        }, 2000);
+      const result = await publishArticle({
+        title,
+        preview,
+        content,
+        priceUSD: price
       });
 
       console.log("🎉 Article published successfully!");
-      alert("Article published successfully!");
+      console.log("Transaction hash:", result.transactionHash);
+      console.log("Block number:", result.blockNumber);
+      console.log("Gas used:", result.gasUsed.toString());
 
-    } catch (error) {
+      setPublishResult(result);
+
+      alert(`Article published successfully!\n\nTransaction: ${result.transactionHash.slice(0, 10)}...`);
+
+    } catch (error: any) {
       console.error("❌ Error publishing article:", error);
-      alert("Error publishing article. Check console for details.");
+      alert(`Error publishing article:\n${error.message || "Unknown error"}`);
     } finally {
       setIsPublishing(false);
       console.log("📝 Publishing state set to false");
@@ -332,16 +349,29 @@ export default function PublishPage() {
           </Card>
 
           {/* Publish Button */}
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center gap-4">
+            {!isConnected && (
+              <Card className="border-2 border-amber-500 bg-amber-50 dark:bg-amber-950/30">
+                <CardContent className="pt-6">
+                  <div className="flex gap-3 items-center">
+                    <span className="text-2xl">⚠️</span>
+                    <p className="font-semibold text-slate-900 dark:text-slate-100">
+                      Please connect your wallet to publish articles
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Button
               size="lg"
               onClick={handlePublish}
-              disabled={!title || !preview || !content || isPublishing}
-              className="text-xl px-12 py-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xl hover:shadow-2xl transition-all hover:scale-105 rounded-xl"
+              disabled={!title || !preview || !content || isPublishing || !isConnected}
+              className="text-xl px-12 py-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xl hover:shadow-2xl transition-all hover:scale-105 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isPublishing ? (
                 <>
-                  <span className="mr-2">⏳</span> Publishing...
+                  <span className="mr-2">⏳</span> Publishing to Arbitrum...
                 </>
               ) : (
                 <>
@@ -349,6 +379,42 @@ export default function PublishPage() {
                 </>
               )}
             </Button>
+
+            {publishResult && (
+              <Card className="border-2 border-green-500 bg-green-50 dark:bg-green-950/30 w-full max-w-2xl">
+                <CardContent className="pt-6">
+                  <div className="space-y-3">
+                    <div className="flex gap-3 items-start">
+                      <span className="text-3xl">✅</span>
+                      <div className="flex-1">
+                        <p className="font-bold text-xl text-green-900 dark:text-green-100 mb-2">
+                          Article Published Successfully!
+                        </p>
+                        <div className="space-y-1 text-sm text-slate-700 dark:text-slate-300">
+                          <p>
+                            <span className="font-semibold">Transaction:</span>{" "}
+                            <a
+                              href={`https://sepolia.arbiscan.io/tx/${publishResult.transactionHash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-700 underline"
+                            >
+                              {publishResult.transactionHash.slice(0, 20)}...
+                            </a>
+                          </p>
+                          <p>
+                            <span className="font-semibold">Block:</span> {publishResult.blockNumber.toString()}
+                          </p>
+                          <p>
+                            <span className="font-semibold">Gas Used:</span> {publishResult.gasUsed.toString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Info Card */}

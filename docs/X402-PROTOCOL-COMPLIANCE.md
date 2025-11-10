@@ -23,7 +23,7 @@ WikiPay acts as a **Resource Server** in the x402 ecosystem:
 ### Contract Deployment
 
 **WikiPayX402 Contract**:
-- Address: `0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e`
+- Address: `0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92`
 - Network: Arbitrum One (Chain ID: 42161)
 - Token: Circle USDC (`0xaf88d065e77c8cC2239327C5EDb3A432268e5831`)
 - Standard: EIP-3009 (transferWithAuthorization)
@@ -55,7 +55,7 @@ X-Payment-Recipient: 0x...
   "error": "Payment Required",
   "protocol": "x402",
   "payment": {
-    "contract": "0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e",
+    "contract": "0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92",
     "chainId": 42161,
     "network": "arbitrum-one",
     "usdc": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
@@ -148,7 +148,7 @@ X-Protocol: x402
     "articleId": "0",
     "price": "10000",
     "creator": "0x...",
-    "contract": "0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e",
+    "contract": "0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92",
     "chainId": 42161
   }
 }
@@ -316,7 +316,7 @@ WikiPay requires an external **x402 Facilitator** to:
     "articleId": "0",
     "price": "10000",
     "creator": "0x...",
-    "contract": "0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e",
+    "contract": "0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92",
     "chainId": 42161
   }
 }
@@ -403,7 +403,7 @@ WikiPay can optionally register with the **Bazaar discovery layer** to enable:
    ```bash
    npx hardhat run scripts/deploy-mainnet-x402.js --network arbitrumOne
    ```
-   ✅ Deployed: `0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e`
+   ✅ Deployed: `0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92`
 
 2. **Setup Facilitator** (separate project):
    ```bash
@@ -451,7 +451,7 @@ WikiPay can optionally register with the **Bazaar discovery layer** to enable:
 
 ```bash
 # Frontend/Backend (.env.local)
-NEXT_PUBLIC_WIKIPAY_ADDRESS=0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e
+NEXT_PUBLIC_WIKIPAY_ADDRESS=0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92
 NEXT_PUBLIC_USDC_ADDRESS=0xaf88d065e77c8cC2239327C5EDb3A432268e5831
 NEXT_PUBLIC_CHAIN_ID=42161
 NEXT_PUBLIC_RPC_URL=https://arb1.arbitrum.io/rpc
@@ -459,7 +459,7 @@ NEXT_PUBLIC_FACILITATOR_URL=https://facilitator.wikipay.org
 
 # Facilitator (.env)
 FACILITATOR_PRIVATE_KEY=0x...  # Wallet that pays gas
-WIKIPAY_CONTRACT=0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e
+WIKIPAY_CONTRACT=0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92
 USDC_ADDRESS=0xaf88d065e77c8cC2239327C5EDb3A432268e5831
 ARBITRUM_ONE_RPC=https://arb1.arbitrum.io/rpc
 ```
@@ -494,7 +494,7 @@ ARBITRUM_ONE_RPC=https://arb1.arbitrum.io/rpc
 
 ---
 
-**Contract**: `0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e`
+**Contract**: `0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92`
 **Network**: Arbitrum One (42161)
 **Protocol**: x402 (HTTP 402 Payment Required)
 **Role**: Resource Server (Content Provider)

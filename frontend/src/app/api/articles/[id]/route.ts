@@ -65,10 +65,18 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  console.log('\n=== x402 Payment Request Started ===');
+  console.log('Article ID:', params.id);
+  console.log('Timestamp:', new Date().toISOString());
+
   try {
     const articleId = BigInt(params.id);
 
     // Fetch article from Arbitrum One
+    console.log('📖 Step 1: Fetching article from blockchain...');
+    console.log('   Contract:', WIKIPAY_CONTRACT_ADDRESS);
+    console.log('   Network: Arbitrum One (42161)');
+
     const article = await publicClient.readContract({
       address: WIKIPAY_CONTRACT_ADDRESS,
       abi: WIKIPAY_ABI,
@@ -78,10 +86,21 @@ export async function GET(
 
     const [ipfsHash, preview, price, creator, unlocks, timestamp] = article;
 
+    console.log('✅ Article fetched successfully');
+    console.log('   IPFS Hash:', ipfsHash);
+    console.log('   Price:', price.toString(), 'USDC tokens');
+    console.log('   Price USD:', (Number(price) / 1_000_000).toFixed(2));
+    console.log('   Creator:', creator);
+
     // x402 Step 1: Check for payment in X-PAYMENT header
+    console.log('\n🔍 Step 2: Checking for payment header...');
     const paymentHeader = request.headers.get('X-PAYMENT');
 
     if (!paymentHeader) {
+      console.log('❌ No X-PAYMENT header found');
+      console.log('💳 Returning HTTP 402 Payment Required');
+      console.log('=== x402 Request Complete (Payment Required) ===\n');
+
       // No payment provided → Return HTTP 402 Payment Required
       return new NextResponse(
         JSON.stringify({
@@ -90,7 +109,7 @@ export async function GET(
           payment: {
             contract: WIKIPAY_CONTRACT_ADDRESS,
             chainId: 42161, // Arbitrum One
-            network: 'arbitrum-one',
+            network: 'arbitrum',
             usdc: USDC_ADDRESS,
             articleId: params.id,
             price: price.toString(),
@@ -115,7 +134,7 @@ export async function GET(
             // x402 protocol headers
             'X-Protocol': 'x402',
             'X-Payment-Required': 'true',
-            'X-Payment-Network': 'arbitrum-one',
+            'X-Payment-Network': 'arbitrum',
             'X-Payment-ChainId': '42161',
             'X-Payment-Token': 'USDC',
             'X-Payment-Amount': price.toString(),
@@ -126,11 +145,21 @@ export async function GET(
     }
 
     // x402 Step 2: Payment provided → Parse and validate
+    console.log('✅ X-PAYMENT header found');
+    console.log('📦 Payment payload length:', paymentHeader.length, 'bytes');
+
     let paymentPayload: PaymentPayload;
 
+    console.log('\n🔧 Step 3: Parsing payment payload...');
     try {
       paymentPayload = JSON.parse(paymentHeader);
+      console.log('✅ Payment payload parsed successfully');
+      console.log('   From:', paymentPayload.from);
+      console.log('   Nullifier:', paymentPayload.nullifier);
+      console.log('   Article ID:', paymentPayload.articleId);
     } catch (error) {
+      console.error('❌ Failed to parse payment payload:', error);
+      console.log('=== x402 Request Failed (Parse Error) ===\n');
       return NextResponse.json(
         { error: 'Invalid payment payload format', protocol: 'x402' },
         { status: 400 }
@@ -138,10 +167,13 @@ export async function GET(
     }
 
     // Validate payment payload structure
+    console.log('\n✔️ Step 4: Validating payment structure...');
     const requiredFields = ['articleId', 'nullifier', 'proof', 'from', 'validAfter', 'validBefore', 'nonce', 'v', 'r', 's'];
     const missingFields = requiredFields.filter(field => !(field in paymentPayload));
 
     if (missingFields.length > 0) {
+      console.error('❌ Missing required fields:', missingFields);
+      console.log('=== x402 Request Failed (Validation Error) ===\n');
       return NextResponse.json(
         {
           error: 'Invalid payment payload',
@@ -151,9 +183,16 @@ export async function GET(
         { status: 400 }
       );
     }
+    console.log('✅ All required fields present');
 
     // Verify article ID matches
+    console.log('\n🔍 Step 5: Verifying article ID match...');
+    console.log('   Expected:', params.id);
+    console.log('   Received:', paymentPayload.articleId);
+
     if (paymentPayload.articleId !== Number(params.id)) {
+      console.error('❌ Article ID mismatch');
+      console.log('=== x402 Request Failed (ID Mismatch) ===\n');
       return NextResponse.json(
         {
           error: 'Payment article ID mismatch',
@@ -164,8 +203,12 @@ export async function GET(
         { status: 400 }
       );
     }
+    console.log('✅ Article ID matches');
 
     // Check if nullifier already used (prevent double-unlock)
+    console.log('\n🔒 Step 6: Checking nullifier status...');
+    console.log('   Nullifier:', paymentPayload.nullifier);
+
     const isUsed = await publicClient.readContract({
       address: WIKIPAY_CONTRACT_ADDRESS,
       abi: WIKIPAY_ABI,
@@ -173,7 +216,11 @@ export async function GET(
       args: [paymentPayload.nullifier as `0x${string}`]
     });
 
+    console.log('   Already used:', isUsed);
+
     if (isUsed) {
+      console.error('❌ Nullifier already used (double-unlock attempt)');
+      console.log('=== x402 Request Failed (Nullifier Used) ===\n');
       return NextResponse.json(
         {
           error: 'Payment already processed',
@@ -183,11 +230,16 @@ export async function GET(
         { status: 409 } // Conflict
       );
     }
+    console.log('✅ Nullifier is fresh (not used)');
 
     // x402 Step 3: Verify payment with facilitator
+    console.log('\n🌐 Step 7: Preparing facilitator communication...');
     const facilitatorUrl = process.env.NEXT_PUBLIC_FACILITATOR_URL || process.env.FACILITATOR_URL;
+    console.log('   Facilitator URL:', facilitatorUrl);
 
     if (!facilitatorUrl) {
+      console.error('❌ Facilitator URL not configured');
+      console.log('=== x402 Request Failed (No Facilitator) ===\n');
       return NextResponse.json(
         {
           error: 'Facilitator not configured',
@@ -198,50 +250,192 @@ export async function GET(
       );
     }
 
-    const facilitatorResponse = await fetch(`${facilitatorUrl}/api/verify-and-settle`, {
+    // Step 3a: Verify payment with facilitator (x402 standard format)
+    console.log('\n🔧 Step 8: Building x402 verify payload...');
+
+    // Use the full signature from the payload (already properly formatted by viem)
+    const fullSignature = paymentPayload.signature as string;
+    console.log('   Full signature from payload:', fullSignature.slice(0, 20) + '...' + fullSignature.slice(-4));
+    console.log('   Signature length:', fullSignature.length, 'chars (expected: 132)');
+
+    const x402VerifyPayload = {
+      paymentPayload: {
+        scheme: "exact" as const,
+        network: "arbitrum",
+        x402Version: 1,
+        payload: {
+          signature: fullSignature,
+          authorization: {
+            from: paymentPayload.from,
+            to: creator,
+            value: price.toString(),
+            validAfter: paymentPayload.validAfter,
+            validBefore: paymentPayload.validBefore,
+            nonce: paymentPayload.nonce
+          }
+        }
+      },
+      paymentRequirements: {
+        scheme: "exact" as const,
+        network: "arbitrum",
+        asset: USDC_ADDRESS,
+        payTo: creator,
+        maxAmountRequired: price.toString()
+      }
+    };
+
+    console.log('📤 x402 Verify Payload:');
+    console.log('   scheme:', x402VerifyPayload.paymentPayload.scheme);
+    console.log('   network:', x402VerifyPayload.paymentPayload.network);
+    console.log('   x402Version:', x402VerifyPayload.paymentPayload.x402Version);
+    console.log('   from:', x402VerifyPayload.paymentPayload.payload.authorization.from);
+    console.log('   to:', x402VerifyPayload.paymentPayload.payload.authorization.to);
+    console.log('   value:', x402VerifyPayload.paymentPayload.payload.authorization.value);
+    console.log('   asset:', x402VerifyPayload.paymentRequirements.asset);
+
+    console.log('\n📡 Step 9: Calling facilitator /verify endpoint...');
+    console.log('   URL:', `${facilitatorUrl}/verify`);
+
+    const verifyResponse = await fetch(`${facilitatorUrl}/verify`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Protocol': 'x402'
       },
-      body: JSON.stringify({
-        payment: paymentPayload,
-        resource: {
-          articleId: params.id,
-          price: price.toString(),
-          creator: creator,
-          contract: WIKIPAY_CONTRACT_ADDRESS,
-          chainId: 42161
-        }
-      })
+      body: JSON.stringify(x402VerifyPayload)
     });
 
-    if (!facilitatorResponse.ok) {
-      const error = await facilitatorResponse.json().catch(() => ({ message: 'Facilitator error' }));
+    console.log('📥 Verify response status:', verifyResponse.status);
+
+    if (!verifyResponse.ok) {
+      console.error('❌ Facilitator verification failed');
+      const error = await verifyResponse.json().catch(() => ({ message: 'Facilitator verification error' }));
+      console.error('   Error:', error);
+      console.log('=== x402 Request Failed (Verification) ===\n');
       return NextResponse.json(
         {
           error: 'Payment verification failed',
           protocol: 'x402',
           details: error.message || 'Facilitator rejected payment'
         },
-        { status: 402 } // Still requires valid payment
+        { status: 402 }
       );
     }
 
-    const facilitatorResult = await facilitatorResponse.json();
+    const verifyResult = await verifyResponse.json();
+    console.log('✅ Verify response received');
+    console.log('   isValid:', verifyResult.isValid);
+    console.log('   payer:', verifyResult.payer);
 
-    if (!facilitatorResult.success) {
+    // x402 standard verification response: { isValid: boolean, payer: string, invalidReason?: string }
+    if (!verifyResult.isValid) {
+      console.error('❌ Payment verification invalid');
+      console.error('   Reason:', verifyResult.invalidReason);
+      console.log('=== x402 Request Failed (Invalid Payment) ===\n');
       return NextResponse.json(
         {
-          error: 'Payment settlement failed',
+          error: 'Payment verification failed',
           protocol: 'x402',
-          details: facilitatorResult.error || 'Unknown error'
+          details: verifyResult.invalidReason || 'Verification failed'
         },
         { status: 402 }
       );
     }
 
-    // x402 Step 4: Payment verified → Return content
+    console.log('✅ Payment verified successfully');
+
+    // Step 3b: Settle payment with facilitator (x402 standard format)
+    console.log('\n🔧 Step 10: Building x402 settle payload...');
+    // Reuse the same signature we constructed for verification
+    const x402SettlePayload = {
+      paymentPayload: {
+        scheme: "exact" as const,
+        network: "arbitrum",
+        x402Version: 1,
+        payload: {
+          signature: fullSignature,
+          authorization: {
+            from: paymentPayload.from,
+            to: creator,
+            value: price.toString(),
+            validAfter: paymentPayload.validAfter,
+            validBefore: paymentPayload.validBefore,
+            nonce: paymentPayload.nonce
+          }
+        }
+      },
+      paymentRequirements: {
+        scheme: "exact" as const,
+        network: "arbitrum",
+        asset: USDC_ADDRESS,
+        payTo: creator,
+        maxAmountRequired: price.toString()
+      }
+    };
+
+    console.log('📤 x402 Settle Payload (same as verify)');
+
+    console.log('\n📡 Step 11: Calling facilitator /settle endpoint...');
+    console.log('   URL:', `${facilitatorUrl}/settle`);
+
+    const settleResponse = await fetch(`${facilitatorUrl}/settle`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Protocol': 'x402'
+      },
+      body: JSON.stringify(x402SettlePayload)
+    });
+
+    console.log('📥 Settle response status:', settleResponse.status);
+
+    if (!settleResponse.ok) {
+      console.error('❌ Facilitator settlement failed');
+      const error = await settleResponse.json().catch(() => ({ message: 'Facilitator settlement error' }));
+      console.error('   Error:', error);
+      console.log('=== x402 Request Failed (Settlement) ===\n');
+      return NextResponse.json(
+        {
+          error: 'Payment settlement failed',
+          protocol: 'x402',
+          details: error.message || 'Facilitator could not settle payment'
+        },
+        { status: 402 }
+      );
+    }
+
+    const facilitatorResult = await settleResponse.json();
+    console.log('✅ Settle response received');
+    console.log('   success:', facilitatorResult.success);
+    console.log('   transaction:', facilitatorResult.transaction);
+    console.log('   network:', facilitatorResult.network);
+    console.log('   payer:', facilitatorResult.payer);
+
+    // x402 standard settlement response: { success: boolean, transaction: string, network: string, payer: string, errorReason?: string }
+    if (!facilitatorResult.success) {
+      console.error('❌ Settlement failed');
+      console.error('   Error reason:', facilitatorResult.errorReason);
+      console.log('=== x402 Request Failed (Settlement Failed) ===\n');
+      return NextResponse.json(
+        {
+          error: 'Payment settlement failed',
+          protocol: 'x402',
+          details: facilitatorResult.errorReason || 'Unknown error'
+        },
+        { status: 402 }
+      );
+    }
+
+    console.log('✅ Payment settled successfully');
+
+    // x402 Step 4: Payment verified and settled → Return content
+    console.log('\n📦 Step 12: Preparing content delivery...');
+    console.log('   IPFS Hash:', ipfsHash);
+    console.log('   Transaction:', facilitatorResult.transaction);
+
+    console.log('✅ Returning HTTP 200 with content');
+    console.log('=== x402 Request Complete (Success) ===\n');
+
     // Note: In production, you would decrypt content from IPFS here
     // For now, return IPFS hash and metadata
 
@@ -263,11 +457,13 @@ export async function GET(
         },
         payment: {
           verified: true,
-          transactionHash: facilitatorResult.transactionHash,
-          blockNumber: facilitatorResult.blockNumber,
+          transactionHash: facilitatorResult.transaction,
+          blockNumber: null, // x402 standard doesn't return blockNumber
           nullifier: paymentPayload.nullifier,
           paidAmount: price.toString(),
-          paidAmountUSD: (Number(price) / 1_000_000).toFixed(2)
+          paidAmountUSD: (Number(price) / 1_000_000).toFixed(2),
+          network: facilitatorResult.network,
+          payer: facilitatorResult.payer
         }
       },
       {

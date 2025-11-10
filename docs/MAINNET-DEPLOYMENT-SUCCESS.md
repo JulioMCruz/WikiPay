@@ -14,7 +14,7 @@
 | Parameter | Value |
 |-----------|-------|
 | **Contract Name** | WikiPayX402 |
-| **Address** | `0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e` |
+| **Address** | `0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92` |
 | **Network** | Arbitrum One (Mainnet) |
 | **Chain ID** | 42161 |
 | **Deployer** | `0xBD730613339499c114d12Eb41dcE3321376b90e5` |
@@ -26,7 +26,7 @@
 ## 🔗 Links
 
 ### Arbiscan (Blockchain Explorer)
-**Contract**: https://arbiscan.io/address/0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e
+**Contract**: https://arbiscan.io/address/0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92
 
 **Block**: https://arbiscan.io/block/398713371
 
@@ -61,7 +61,7 @@ Since automated verification failed due to missing Arbiscan API key, you can ver
 1. **Visit**: https://arbiscan.io/verifyContract
 
 2. **Enter Details**:
-   - Contract Address: `0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e`
+   - Contract Address: `0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92`
    - Compiler: Solidity 0.8.20
    - Optimization: Yes (200 runs)
 
@@ -76,7 +76,7 @@ Since automated verification failed due to missing Arbiscan API key, you can ver
 ARBISCAN_API_KEY=your_api_key_here
 
 # Then run:
-npx hardhat verify --network arbitrumOne 0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e
+npx hardhat verify --network arbitrumOne 0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92
 ```
 
 ---
@@ -91,7 +91,7 @@ NEXT_PUBLIC_CHAIN_ID=42161
 NEXT_PUBLIC_RPC_URL=https://arb1.arbitrum.io/rpc
 
 # WikiPayX402 Contract
-NEXT_PUBLIC_WIKIPAY_CONTRACT=0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e
+NEXT_PUBLIC_WIKIPAY_CONTRACT=0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92
 
 # Circle USDC on Arbitrum One
 NEXT_PUBLIC_USDC_ADDRESS=0xaf88d065e77c8cC2239327C5EDb3A432268e5831
@@ -141,7 +141,7 @@ npx hardhat console --network arbitrumOne
 # In console:
 const contract = await ethers.getContractAt(
   "WikiPayX402",
-  "0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e"
+  "0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92"
 );
 
 // Get total articles (should be 0)
@@ -295,7 +295,7 @@ All documentation available in repository:
 - Arbitrum Docs: https://docs.arbitrum.io/
 - Circle USDC: https://www.circle.com/en/usdc
 - EIP-3009: https://eips.ethereum.org/EIPS/eip-3009
-- Contract: https://arbiscan.io/address/0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e
+- Contract: https://arbiscan.io/address/0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92
 
 ---
 
@@ -313,7 +313,7 @@ The future of decentralized micropayments starts here.
 
 ---
 
-**Contract Address**: `0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e`
+**Contract Address**: `0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92`
 **Network**: Arbitrum One
 **Protocol**: x402
 **Status**: LIVE ✅

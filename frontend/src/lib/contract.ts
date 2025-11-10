@@ -1,5 +1,6 @@
 import { createPublicClient, createWalletClient, custom, http, parseUnits } from 'viem';
 import { arbitrum } from 'viem/chains';
+import WikiPayX402ABI from './WikiPayX402-ABI.json';
 
 // Contract addresses from environment
 export const WIKIPAY_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_WIKIPAY_ADDRESS as `0x${string}`;
@@ -47,102 +48,8 @@ export const USDC_ABI = [
 ] as const;
 
 // WikiPayX402 Contract ABI (x402 protocol with USDC)
-export const WIKIPAY_ABI = [
-  {
-    type: 'function',
-    name: 'publishArticle',
-    inputs: [
-      { name: 'ipfsHash', type: 'string' },
-      { name: 'preview', type: 'string' },
-      { name: 'price', type: 'uint256' }
-    ],
-    outputs: [{ name: '', type: 'uint256' }],
-    stateMutability: 'nonpayable'
-  },
-  {
-    type: 'function',
-    name: 'getArticle',
-    inputs: [{ name: 'articleId', type: 'uint256' }],
-    outputs: [
-      {
-        name: '',
-        type: 'tuple',
-        components: [
-          { name: 'ipfsHash', type: 'string' },
-          { name: 'preview', type: 'string' },
-          { name: 'price', type: 'uint256' },
-          { name: 'creator', type: 'address' },
-          { name: 'unlocks', type: 'uint256' },
-          { name: 'timestamp', type: 'uint256' }
-        ]
-      }
-    ],
-    stateMutability: 'view'
-  },
-  {
-    type: 'function',
-    name: 'getTotalArticles',
-    inputs: [],
-    outputs: [{ name: '', type: 'uint256' }],
-    stateMutability: 'view'
-  },
-  {
-    type: 'function',
-    name: 'unlockArticleX402',
-    inputs: [
-      { name: 'articleId', type: 'uint256' },
-      { name: 'nullifier', type: 'bytes32' },
-      { name: 'proof', type: 'bytes32' },
-      { name: 'from', type: 'address' },
-      { name: 'validAfter', type: 'uint256' },
-      { name: 'validBefore', type: 'uint256' },
-      { name: 'nonce', type: 'bytes32' },
-      { name: 'v', type: 'uint8' },
-      { name: 'r', type: 'bytes32' },
-      { name: 's', type: 'bytes32' }
-    ],
-    outputs: [{ name: '', type: 'bool' }],
-    stateMutability: 'nonpayable'
-  },
-  {
-    type: 'function',
-    name: 'getUSDCAddress',
-    inputs: [],
-    outputs: [{ name: '', type: 'address' }],
-    stateMutability: 'view'
-  },
-  {
-    type: 'function',
-    name: 'getPriceFormatted',
-    inputs: [{ name: 'articleId', type: 'uint256' }],
-    outputs: [
-      { name: 'rawPrice', type: 'uint256' },
-      { name: 'formattedPrice', type: 'string' }
-    ],
-    stateMutability: 'view'
-  },
-  {
-    type: 'function',
-    name: 'getIpfsHash',
-    inputs: [{ name: 'articleId', type: 'uint256' }],
-    outputs: [{ name: '', type: 'string' }],
-    stateMutability: 'view'
-  },
-  {
-    type: 'function',
-    name: 'isNullifierUsed',
-    inputs: [{ name: 'nullifier', type: 'bytes32' }],
-    outputs: [{ name: '', type: 'bool' }],
-    stateMutability: 'view'
-  },
-  {
-    type: 'function',
-    name: 'getCreatorEarnings',
-    inputs: [{ name: 'creator', type: 'address' }],
-    outputs: [{ name: '', type: 'uint256' }],
-    stateMutability: 'view'
-  }
-] as const;
+// Using the actual compiled ABI from Hardhat to ensure correct decoding
+export const WIKIPAY_ABI = WikiPayX402ABI;
 
 // Create public client for reading (Arbitrum One mainnet)
 export const publicClient = createPublicClient({
@@ -245,7 +152,7 @@ export async function getTotalArticles(): Promise<bigint> {
     abi: WIKIPAY_ABI,
     functionName: 'getTotalArticles'
   });
-  return result;
+  return result as bigint;
 }
 
 // Helper: Get article details
@@ -257,14 +164,17 @@ export async function getArticle(articleId: bigint) {
     args: [articleId]
   });
 
-  // Result is a tuple from Solidity
+  // The contract returns individual values (string, string, uint256, address, uint256, uint256)
+  // Viem automatically converts this to an array
+  const [ipfsHash, preview, price, creator, unlocks, timestamp] = result as [string, string, bigint, `0x${string}`, bigint, bigint];
+
   return {
-    ipfsHash: result.ipfsHash,
-    preview: result.preview,
-    price: result.price,
-    creator: result.creator,
-    unlocks: result.unlocks,
-    timestamp: result.timestamp
+    ipfsHash,
+    preview,
+    price,
+    creator,
+    unlocks,
+    timestamp
   };
 }
 
@@ -320,11 +230,11 @@ export async function checkIfUnlocked(articleId: bigint): Promise<boolean> {
     const isUsed = await publicClient.readContract({
       address: WIKIPAY_CONTRACT_ADDRESS,
       abi: WIKIPAY_ABI,
-      functionName: 'isNullifierUsed',
+      functionName: 'nullifiersUsed',
       args: [nullifier as `0x${string}`]
     });
 
-    return isUsed;
+    return isUsed as boolean;
   } catch (error) {
     console.error("Error checking unlock status:", error);
     return false;
@@ -343,8 +253,11 @@ export async function generateTransferAuthorization(
   const walletClient = await getWalletClient();
 
   // EIP-712 domain for Circle USDC on Arbitrum One
+  // IMPORTANT: Must match the actual USDC contract's EIP-3009 domain for transferWithAuthorization
+  // Circle's USDC uses "USD Coin" (not "USDC") for the domain name
+  // See: https://github.com/circlefin/stablecoin-evm
   const domain = {
-    name: 'USD Coin',
+    name: 'USD Coin',  // Circle USDC contract uses "USD Coin" for EIP-3009
     version: '2',
     chainId: 42161,
     verifyingContract: USDC_ADDRESS
@@ -417,7 +330,7 @@ export async function unlockArticle(articleId: bigint, price: bigint) {
   console.log("Generating EIP-3009 authorization...");
 
   // Generate EIP-3009 transfer authorization signature
-  const { v, r, s } = await generateTransferAuthorization(
+  const { v, r, s, signature } = await generateTransferAuthorization(
     account,
     creator,
     price,
@@ -427,6 +340,7 @@ export async function unlockArticle(articleId: bigint, price: bigint) {
   );
 
   console.log("Authorization signed (gasless USDC payment)");
+  console.log("Full signature:", signature);
 
   try {
     // Call unlockArticleX402 with EIP-3009 authorization
@@ -465,11 +379,6 @@ export async function unlockArticle(articleId: bigint, price: bigint) {
 
 // Helper: Get IPFS hash after unlocking
 export async function getIpfsHash(articleId: bigint): Promise<string> {
-  const result = await publicClient.readContract({
-    address: WIKIPAY_CONTRACT_ADDRESS,
-    abi: WIKIPAY_ABI,
-    functionName: 'getIpfsHash',
-    args: [articleId]
-  });
-  return result;
+  const article = await getArticle(articleId);
+  return article.ipfsHash;
 }

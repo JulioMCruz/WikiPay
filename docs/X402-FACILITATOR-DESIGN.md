@@ -38,7 +38,7 @@ The **WikiPay x402 Facilitator** is a backend service that processes HTTP 402 pa
 **Type**: Backend API Service
 **Protocol**: HTTP 402 Payment Required
 **Blockchain**: Arbitrum One (Chain ID: 42161)
-**Contract**: `0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e` (WikiPayX402)
+**Contract**: `0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92` (WikiPayX402)
 
 ### Responsibilities
 
@@ -77,7 +77,7 @@ The **WikiPay x402 Facilitator** is a backend service that processes HTTP 402 pa
 **Response (Unpaid)**:
 ```http
 HTTP/1.1 402 Payment Required
-WWW-Authenticate: x402 contract="0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e"
+WWW-Authenticate: x402 contract="0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92"
                        chain="42161"
                        usdc="0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
                        price="10000"
@@ -87,7 +87,7 @@ Content-Type: application/json
   "error": "Payment Required",
   "protocol": "x402",
   "payment": {
-    "contract": "0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e",
+    "contract": "0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92",
     "chainId": 42161,
     "usdc": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
     "articleId": 0,
@@ -190,7 +190,7 @@ npx hardhat run scripts/generate-facilitator-wallet.js
 # Backend .env
 FACILITATOR_PRIVATE_KEY=0x...  # Wallet that pays gas
 FACILITATOR_MIN_BALANCE=0.001  # Alert threshold
-WIKIPAY_CONTRACT=0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e
+WIKIPAY_CONTRACT=0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92
 USDC_ADDRESS=0xaf88d065e77c8cC2239327C5EDb3A432268e5831
 ARBITRUM_ONE_RPC=https://arb1.arbitrum.io/rpc
 ```
@@ -288,7 +288,7 @@ ARBITRUM_ONE_RPC=https://arb1.arbitrum.io/rpc
 
 ## Deployment Checklist
 
-- [ ] Deploy WikiPayX402 contract (✅ Done: `0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e`)
+- [ ] Deploy WikiPayX402 contract (✅ Done: `0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92`)
 - [ ] Generate facilitator wallet
 - [ ] Fund facilitator wallet with 0.01 ETH
 - [ ] Implement `/api/x402/unlock` endpoint
@@ -310,7 +310,7 @@ ARBITRUM_ONE_RPC=https://arb1.arbitrum.io/rpc
 
 ---
 
-**Contract**: `0xd24d48679F0d0Bb92c69610E554ea5cbd2F2F82e`
+**Contract**: `0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92`
 **Network**: Arbitrum One (42161)
 **Protocol**: HTTP 402 Payment Required (x402)
 **Facilitator**: WikiPay Backend (pays gas for users)

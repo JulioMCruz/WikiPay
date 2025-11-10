@@ -17,9 +17,10 @@ import {
 } from "@/components/ui/dialog";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { publishArticle } from "@/lib/contract";
-import { useAccount } from "wagmi";
+import { useAccount, useSwitchChain } from "wagmi";
 import { simpleEncrypt } from "@/lib/encryption";
 import { uploadToPinata } from "@/lib/pinata";
+import { arbitrum } from "viem/chains";
 
 const exampleArticles = {
   x402: {
@@ -233,7 +234,8 @@ Thank you for testing WikiPay! 🚀`,
 };
 
 export default function PublishPage() {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chain } = useAccount();
+  const { switchChain } = useSwitchChain();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [preview, setPreview] = useState("");
@@ -264,6 +266,21 @@ export default function PublishPage() {
       setErrorMessage("Please connect your wallet first!");
       setShowErrorDialog(true);
       return;
+    }
+
+    // Check if on correct network (Arbitrum One mainnet = 42161)
+    if (chain?.id !== 42161) {
+      console.log("⚠️ Wrong network detected. Current:", chain?.id, "Expected: 42161 (Arbitrum One)");
+      try {
+        console.log("🔄 Switching to Arbitrum One...");
+        await switchChain({ chainId: arbitrum.id });
+        console.log("✅ Network switched to Arbitrum One");
+      } catch (switchError: any) {
+        console.error("❌ Failed to switch network:", switchError);
+        setErrorMessage(`Please switch to Arbitrum One network manually. Current network: ${chain?.name || 'Unknown'}`);
+        setShowErrorDialog(true);
+        return;
+      }
     }
 
     try {
@@ -520,6 +537,38 @@ export default function PublishPage() {
               </Card>
             )}
 
+            {isConnected && chain?.id !== 42161 && (
+              <Card className="border-2 border-red-500 bg-red-50 dark:bg-red-950/30 w-full max-w-2xl">
+                <CardContent className="pt-6">
+                  <div className="flex gap-3 items-center">
+                    <span className="text-2xl">🚨</span>
+                    <div className="flex-1">
+                      <p className="font-semibold text-slate-900 dark:text-slate-100 mb-1">
+                        Wrong Network Detected
+                      </p>
+                      <p className="text-sm text-slate-700 dark:text-slate-300 mb-3">
+                        Currently connected to: <span className="font-mono font-semibold">{chain?.name || 'Unknown'}</span>
+                        <br />
+                        Required network: <span className="font-mono font-semibold text-green-600">Arbitrum One</span>
+                      </p>
+                      <Button
+                        onClick={async () => {
+                          try {
+                            await switchChain({ chainId: arbitrum.id });
+                          } catch (error) {
+                            console.error("Failed to switch network:", error);
+                          }
+                        }}
+                        className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700"
+                      >
+                        🔄 Switch to Arbitrum One
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Button
               size="lg"
               onClick={handlePublish}
@@ -551,7 +600,7 @@ export default function PublishPage() {
                           <p>
                             <span className="font-semibold">Transaction:</span>{" "}
                             <a
-                              href={`https://sepolia.arbiscan.io/tx/${publishResult.transactionHash}`}
+                              href={`https://arbiscan.io/tx/${publishResult.transactionHash}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-600 hover:text-blue-700 underline"
@@ -611,7 +660,7 @@ export default function PublishPage() {
                       <div className="flex justify-between">
                         <span className="text-slate-600 dark:text-slate-400">Transaction:</span>
                         <a
-                          href={`https://sepolia.arbiscan.io/tx/${publishResult.transactionHash}`}
+                          href={`https://arbiscan.io/tx/${publishResult.transactionHash}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:underline font-mono"

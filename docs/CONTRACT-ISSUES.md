@@ -1,4 +1,4 @@
-# WikiPay Contract Issues & Status
+# zkWiki Contract Issues & Status
 
 ## Current Status
 

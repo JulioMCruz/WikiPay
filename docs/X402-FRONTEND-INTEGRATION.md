@@ -1,4 +1,4 @@
-# WikiPay x402 Frontend Integration Guide
+# zkWiki x402 Frontend Integration Guide
 
 ## Current Status
 

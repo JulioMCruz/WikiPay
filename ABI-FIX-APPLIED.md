@@ -6,7 +6,7 @@
 
 ## Problem
 
-After deploying the new WikiPayX402 contract to Arbitrum One (`0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92`), the frontend could not read articles even though:
+After deploying the new zkWikiX402 contract to Arbitrum One (`0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92`), the frontend could not read articles even though:
 - Contract was deployed successfully ✅
 - Articles were published (total articles = 1) ✅
 - Cast CLI could successfully call `getArticle(0)` ✅
@@ -69,7 +69,7 @@ Created the actual compiled ABI from Hardhat artifacts:
 
 ```bash
 cd contracts-solidity
-cat artifacts/contracts/WikiPayX402.sol/WikiPayX402.json | jq '.abi' > ../frontend/src/lib/WikiPayX402-ABI.json
+cat artifacts/contracts/zkWikiX402.sol/zkWikiX402.json | jq '.abi' > ../frontend/src/lib/zkWikiX402-ABI.json
 ```
 
 ### 2. Update Frontend to Use Compiled ABI
@@ -78,10 +78,10 @@ Modified `/frontend/src/lib/contract.ts`:
 
 ```typescript
 // Import the actual compiled ABI
-import WikiPayX402ABI from './WikiPayX402-ABI.json';
+import zkWikiX402ABI from './zkWikiX402-ABI.json';
 
 // Use it instead of manual definition
-export const WIKIPAY_ABI = WikiPayX402ABI as const;
+export const WIKIPAY_ABI = zkWikiX402ABI as const;
 ```
 
 ### 3. Fix Result Decoding
@@ -142,7 +142,7 @@ After applying the ABI fix, the frontend should now be able to:
 
 ## Files Changed
 
-1. **`/frontend/src/lib/WikiPayX402-ABI.json`** - NEW - Compiled ABI from Hardhat
+1. **`/frontend/src/lib/zkWikiX402-ABI.json`** - NEW - Compiled ABI from Hardhat
 2. **`/frontend/src/lib/contract.ts`** - UPDATED
    - Import compiled ABI
    - Fix `getArticle()` result decoding

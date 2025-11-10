@@ -1,4 +1,4 @@
-# 🎉 WikiPayX402 Mainnet Deployment - SUCCESS!
+# 🎉 zkWikiX402 Mainnet Deployment - SUCCESS!
 
 ## Deployment Summary
 
@@ -13,7 +13,7 @@
 
 | Parameter | Value |
 |-----------|-------|
-| **Contract Name** | WikiPayX402 |
+| **Contract Name** | zkWikiX402 |
 | **Address** | `0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92` |
 | **Network** | Arbitrum One (Mainnet) |
 | **Chain ID** | 42161 |
@@ -66,7 +66,7 @@ Since automated verification failed due to missing Arbiscan API key, you can ver
    - Optimization: Yes (200 runs)
 
 3. **Upload Source**:
-   - File: `contracts-solidity/contracts/WikiPayX402.sol`
+   - File: `contracts-solidity/contracts/zkWikiX402.sol`
    - Or copy/paste the source code
 
 4. **Submit** - Contract will be verified
@@ -90,7 +90,7 @@ Update `frontend/.env.local`:
 NEXT_PUBLIC_CHAIN_ID=42161
 NEXT_PUBLIC_RPC_URL=https://arb1.arbitrum.io/rpc
 
-# WikiPayX402 Contract
+# zkWikiX402 Contract
 NEXT_PUBLIC_WIKIPAY_CONTRACT=0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92
 
 # Circle USDC on Arbitrum One
@@ -140,7 +140,7 @@ npx hardhat console --network arbitrumOne
 
 # In console:
 const contract = await ethers.getContractAt(
-  "WikiPayX402",
+  "zkWikiX402",
   "0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92"
 );
 
@@ -210,7 +210,7 @@ This deployment is **fully compliant** with x402 protocol:
 Returns proper `402 Payment Required` for locked content
 
 ### ✅ WWW-Authenticate Headers
-Specifies payment method: `Ethereum-ZK realm="WikiPay"`
+Specifies payment method: `Ethereum-ZK realm="zkWiki"`
 
 ### ✅ Payment Verification
 On-chain verification via `isNullifierUsed()`
@@ -307,7 +307,7 @@ You've successfully deployed a **production-ready x402 payment facilitator** wit
 - ✅ Zero-knowledge privacy
 - ✅ Full HTTP 402 compliance
 
-**WikiPay is now live on Arbitrum One!** 🚀
+**zkWiki is now live on Arbitrum One!** 🚀
 
 The future of decentralized micropayments starts here.
 

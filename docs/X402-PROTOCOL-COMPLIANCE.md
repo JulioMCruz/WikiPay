@@ -1,14 +1,14 @@
-# WikiPay x402 Protocol Compliance Documentation
+# zkWiki x402 Protocol Compliance Documentation
 
 ## Overview
 
-WikiPay implements the **x402 protocol** as a **Resource Server** (content provider) that requires payment for access to premium content.
+zkWiki implements the **x402 protocol** as a **Resource Server** (content provider) that requires payment for access to premium content.
 
 **Official x402 Documentation**: https://x402.gitbook.io/x402/
 
 ## x402 Protocol Role: Resource Server
 
-WikiPay acts as a **Resource Server** in the x402 ecosystem:
+zkWiki acts as a **Resource Server** in the x402 ecosystem:
 
 - ✅ Defines payment requirements for content access
 - ✅ Returns HTTP 402 Payment Required responses
@@ -22,7 +22,7 @@ WikiPay acts as a **Resource Server** in the x402 ecosystem:
 
 ### Contract Deployment
 
-**WikiPayX402 Contract**:
+**zkWikiX402 Contract**:
 - Address: `0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92`
 - Network: Arbitrum One (Chain ID: 42161)
 - Token: Circle USDC (`0xaf88d065e77c8cC2239327C5EDb3A432268e5831`)
@@ -276,7 +276,7 @@ Per x402 roadmap:
 
 ### Facilitator Requirements
 
-WikiPay requires an external **x402 Facilitator** to:
+zkWiki requires an external **x402 Facilitator** to:
 
 1. **Verify Payment Payloads**:
    - Validate EIP-3009 signatures
@@ -284,7 +284,7 @@ WikiPay requires an external **x402 Facilitator** to:
    - Verify payment amounts
 
 2. **Settle Payments on Blockchain**:
-   - Call `unlockArticleX402()` on WikiPayX402 contract
+   - Call `unlockArticleX402()` on zkWikiX402 contract
    - Pay gas fees on Arbitrum One
    - Monitor transaction confirmations
 
@@ -352,16 +352,16 @@ Per x402 documentation:
    - Solana, Base, Polygon support
    - AI agent optimization
 
-3. **Self-Hosted Facilitator** (WikiPay implementation)
+3. **Self-Hosted Facilitator** (zkWiki implementation)
    - Custom Arbitrum One support
    - Full control over gas payments
-   - Integration with WikiPayX402 contract
+   - Integration with zkWikiX402 contract
 
 ## Bazaar Discovery Layer
 
 ### Registration (Optional)
 
-WikiPay can optionally register with the **Bazaar discovery layer** to enable:
+zkWiki can optionally register with the **Bazaar discovery layer** to enable:
 
 - Programmatic service discovery by AI agents
 - Global visibility without manual marketing
@@ -399,7 +399,7 @@ WikiPay can optionally register with the **Bazaar discovery layer** to enable:
 
 ### Test Flow
 
-1. **Deploy WikiPayX402 Contract**:
+1. **Deploy zkWikiX402 Contract**:
    ```bash
    npx hardhat run scripts/deploy-mainnet-x402.js --network arbitrumOne
    ```
@@ -475,9 +475,9 @@ ARBITRUM_ONE_RPC=https://arb1.arbitrum.io/rpc
 - **Bazaar Discovery**: https://x402.gitbook.io/x402/core-concepts/bazaar-discovery-layer
 - **Network Support**: https://x402.gitbook.io/x402/core-concepts/network-and-token-support
 
-### WikiPay Implementation
+### zkWiki Implementation
 
-- **Smart Contract**: [WikiPayX402.sol](contracts-solidity/contracts/WikiPayX402.sol)
+- **Smart Contract**: [zkWikiX402.sol](contracts-solidity/contracts/zkWikiX402.sol)
 - **API Route**: [route.ts](frontend/src/app/api/articles/[id]/route.ts)
 - **Contract Library**: [contract.ts](frontend/src/lib/contract.ts)
 - **Deployment Guide**: [ARBITRUM-ONE-DEPLOYMENT.md](ARBITRUM-ONE-DEPLOYMENT.md)

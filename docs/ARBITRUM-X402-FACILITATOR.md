@@ -2,7 +2,7 @@
 
 ## Overview
 
-**WikiPay uses Arbitrum Sepolia as the decentralized x402 payment facilitator** - verifying all HTTP 402 payment requests on-chain without any centralized intermediary.
+**zkWiki uses Arbitrum Sepolia as the decentralized x402 payment facilitator** - verifying all HTTP 402 payment requests on-chain without any centralized intermediary.
 
 ## Why Arbitrum for x402?
 
@@ -30,7 +30,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│            WikiPay x402 Protocol Stack              │
+│            zkWiki x402 Protocol Stack              │
 └─────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────┐
@@ -96,7 +96,7 @@ X-Nullifier-Proof: [empty]
 → Arbitrum Response: false (not paid)
 
 ← HTTP 402 Payment Required
-← WWW-Authenticate: Ethereum-ZK realm="WikiPay"
+← WWW-Authenticate: Ethereum-ZK realm="zkWiki"
 ← X-Payment-Address: 0x37e47cd8e4a5C735d1eD304a9C17968f05Ce07fb
 ← X-Payment-Network: arbitrum-sepolia
 ← X-Payment-ChainId: 421614
@@ -149,7 +149,7 @@ Explorer: https://sepolia.arbiscan.io/
 ### Contract Functions (x402 Facilitator)
 
 ```solidity
-contract WikiPay {
+contract zkWiki {
     // x402 Payment Registry
     mapping(bytes32 => bool) public nullifiersUsed;
 
@@ -184,7 +184,7 @@ contract WikiPay {
 
 ## x402 API Endpoints
 
-### WikiPay x402 REST API
+### zkWiki x402 REST API
 
 ```
 Base URL: https://wikipay.app/api
@@ -219,7 +219,7 @@ GET /api/articles/{id}?full=true
 
 Response: 402 Payment Required
 Headers:
-  WWW-Authenticate: Ethereum-ZK realm="WikiPay", contract="0x37e47cd8..."
+  WWW-Authenticate: Ethereum-ZK realm="zkWiki", contract="0x37e47cd8..."
   X-Payment-Required: true
   X-Payment-Address: 0x37e47cd8e4a5C735d1eD304a9C17968f05Ce07fb
   X-Payment-Network: arbitrum-sepolia
@@ -283,7 +283,7 @@ Body:
 
 ### 3. **Decentralized Verification**
 
-Unlike traditional 402 implementations that use centralized payment processors (Stripe, PayPal), WikiPay uses **Arbitrum smart contracts** as the trustless facilitator:
+Unlike traditional 402 implementations that use centralized payment processors (Stripe, PayPal), zkWiki uses **Arbitrum smart contracts** as the trustless facilitator:
 
 - ✅ No payment processor fees (30% → 0%)
 - ✅ Censorship-resistant (no account bans)
@@ -295,7 +295,7 @@ Unlike traditional 402 implementations that use centralized payment processors (
 
 ### Official x402 Specification Compliance
 
-WikiPay follows the emerging **x402 Web3 Payment Protocol**:
+zkWiki follows the emerging **x402 Web3 Payment Protocol**:
 
 1. ✅ **HTTP 402 Status Code** - Returns proper 402 response
 2. ✅ **WWW-Authenticate Header** - Specifies payment method
@@ -306,7 +306,7 @@ WikiPay follows the emerging **x402 Web3 Payment Protocol**:
 ### Arbitrum-Specific x402 Headers
 
 ```http
-WWW-Authenticate: Ethereum-ZK realm="WikiPay", contract="0x37e47cd8..."
+WWW-Authenticate: Ethereum-ZK realm="zkWiki", contract="0x37e47cd8..."
 X-Payment-Network: arbitrum-sepolia
 X-Payment-ChainId: 421614
 X-Payment-Method: unlockArticleAnonymous
@@ -332,7 +332,7 @@ curl -X GET "https://wikipay.app/api/articles/1?full=true" \
   -H "Accept: application/json"
 
 # Response: 402 Payment Required
-# WWW-Authenticate: Ethereum-ZK realm="WikiPay"
+# WWW-Authenticate: Ethereum-ZK realm="zkWiki"
 ```
 
 ### 3. Verify Payment on Arbitrum
@@ -363,7 +363,7 @@ curl -X GET "https://wikipay.app/api/articles/1?full=true" \
 
 ### Official Statement
 
-> **"WikiPay is a fully compliant x402 payment facilitator using Arbitrum Sepolia for decentralized payment verification."**
+> **"zkWiki is a fully compliant x402 payment facilitator using Arbitrum Sepolia for decentralized payment verification."**
 
 ### Compliance Checklist
 
@@ -397,7 +397,7 @@ Benefits:
 
 ## Conclusion
 
-**Arbitrum Sepolia is WikiPay's x402 payment facilitator**, providing:
+**Arbitrum Sepolia is zkWiki's x402 payment facilitator**, providing:
 
 1. ✅ **Decentralized Verification** - No centralized payment processor
 2. ✅ **Cost-Effective** - $0.01-0.05 gas fees enable micropayments
@@ -406,4 +406,4 @@ Benefits:
 5. ✅ **Global Access** - Permissionless, censorship-resistant
 6. ✅ **Transparent** - All payments verifiable on-chain
 
-**WikiPay + Arbitrum = Decentralized x402 Protocol** 🚀
+**zkWiki + Arbitrum = Decentralized x402 Protocol** 🚀

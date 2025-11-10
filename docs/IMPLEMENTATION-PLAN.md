@@ -1,4 +1,4 @@
-# WikiPay Anonymous - Implementation Plan
+# zkWiki Anonymous - Implementation Plan
 
 Complete 8-hour implementation plan for privacy-preserving article payments using ZK proofs + Arbitrum Stylus.
 

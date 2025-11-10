@@ -8,13 +8,13 @@
 
 ## Preview
 
-This is a short test article to verify the WikiPay publishing system. It demonstrates the anonymous payment flow and content unlocking mechanism.
+This is a short test article to verify the zkWiki publishing system. It demonstrates the anonymous payment flow and content unlocking mechanism.
 
 ---
 
 ## Full Article
 
-This is a test article for the WikiPay anonymous payment system.
+This is a test article for the zkWiki anonymous payment system.
 
 ## Purpose
 
@@ -37,4 +37,4 @@ Testing the following features:
 - Complete anonymity
 - Powered by Arbitrum Stylus
 
-Thank you for testing WikiPay! 🚀
+Thank you for testing zkWiki! 🚀

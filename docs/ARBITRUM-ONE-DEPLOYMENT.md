@@ -1,8 +1,8 @@
-# WikiPayX402 Arbitrum One Mainnet Deployment Guide
+# zkWikiX402 Arbitrum One Mainnet Deployment Guide
 
 ## Overview
 
-Deploy **WikiPayX402** to **Arbitrum One** with **Circle USDC** (EIP-3009) for strict x402 protocol compliance.
+Deploy **zkWikiX402** to **Arbitrum One** with **Circle USDC** (EIP-3009) for strict x402 protocol compliance.
 
 ## Prerequisites
 
@@ -60,11 +60,11 @@ cd contracts-solidity
 # Clean previous build
 npx hardhat clean
 
-# Compile WikiPayX402
+# Compile zkWikiX402
 npx hardhat compile
 
 # Verify compilation
-ls artifacts/contracts/WikiPayX402.sol/WikiPayX402.json
+ls artifacts/contracts/zkWikiX402.sol/zkWikiX402.json
 ```
 
 Expected output:
@@ -75,13 +75,13 @@ Expected output:
 ### Step 2: Deploy to Arbitrum One
 
 ```bash
-# Deploy WikiPayX402 to Arbitrum One mainnet
+# Deploy zkWikiX402 to Arbitrum One mainnet
 npx hardhat run scripts/deploy-mainnet-x402.js --network arbitrumOne
 ```
 
 **Expected Output**:
 ```
-🚀 Deploying WikiPayX402 to Arbitrum One Mainnet...
+🚀 Deploying zkWikiX402 to Arbitrum One Mainnet...
 
 📝 Deploying with account: 0x...
 💰 Account balance: 0.005 ETH
@@ -90,8 +90,8 @@ npx hardhat run scripts/deploy-mainnet-x402.js --network arbitrumOne
 🔗 Chain ID: 42161
 ✅ Network verified: Arbitrum One
 
-📦 Deploying WikiPayX402 contract...
-✅ WikiPayX402 deployed to: 0x... [NEW ADDRESS]
+📦 Deploying zkWikiX402 contract...
+✅ zkWikiX402 deployed to: 0x... [NEW ADDRESS]
 💵 USDC Address: 0xaf88d065e77c8cC2239327C5EDb3A432268e5831
 ✅ USDC verified: Circle USDC with EIP-3009 support
 
@@ -100,7 +100,7 @@ npx hardhat run scripts/deploy-mainnet-x402.js --network arbitrumOne
 ============================================================
 
 📋 Contract Information:
-   Contract: WikiPayX402
+   Contract: zkWikiX402
    Address: 0x... [YOUR CONTRACT ADDRESS]
    Network: Arbitrum One (Mainnet)
    Chain ID: 42161
@@ -129,7 +129,7 @@ contracts-solidity/deployments/arbitrum-one-mainnet.json
 Verify it contains:
 ```json
 {
-  "contract": "WikiPayX402",
+  "contract": "zkWikiX402",
   "address": "0x...",
   "network": "Arbitrum One",
   "chainId": 42161,
@@ -149,7 +149,7 @@ Update `frontend/.env.local`:
 NEXT_PUBLIC_CHAIN_ID=42161
 NEXT_PUBLIC_RPC_URL=https://arb1.arbitrum.io/rpc
 
-# WikiPayX402 Contract (REPLACE WITH YOUR ADDRESS)
+# zkWikiX402 Contract (REPLACE WITH YOUR ADDRESS)
 NEXT_PUBLIC_WIKIPAY_CONTRACT=0xYOUR_CONTRACT_ADDRESS_HERE
 
 # Circle USDC on Arbitrum One
@@ -181,7 +181,7 @@ Visit: `https://arbiscan.io/address/YOUR_CONTRACT_ADDRESS`
 
 Verify:
 - ✅ Contract verified (green checkmark)
-- ✅ Contract name: WikiPayX402
+- ✅ Contract name: zkWikiX402
 - ✅ Solidity version: 0.8.20
 - ✅ No errors in code
 
@@ -192,7 +192,7 @@ Verify:
 npx hardhat console --network arbitrumOne
 
 # In console:
-const contract = await ethers.getContractAt("WikiPayX402", "YOUR_ADDRESS");
+const contract = await ethers.getContractAt("zkWikiX402", "YOUR_ADDRESS");
 await contract.getTotalArticles(); // Should return 0n
 
 # Verify USDC address
@@ -259,7 +259,7 @@ curl -i https://your-domain.com/api/articles/0?full=true
 
 # Should return:
 HTTP/1.1 402 Payment Required
-WWW-Authenticate: Ethereum-ZK realm="WikiPay", contract="0x..."
+WWW-Authenticate: Ethereum-ZK realm="zkWiki", contract="0x..."
 X-Payment-Required: true
 X-Payment-Amount: 10000 USDC
 X-Payment-Network: arbitrum-one

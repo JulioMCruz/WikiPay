@@ -1,4 +1,4 @@
-# ✅ WikiPayX402 Deployment Complete
+# ✅ zkWikiX402 Deployment Complete
 
 **Date**: November 10, 2025
 **Status**: 🟢 LIVE ON ARBITRUM ONE MAINNET
@@ -8,7 +8,7 @@
 ## 🎉 Deployment Summary
 
 ### Contract Information
-- **Contract Name**: WikiPayX402
+- **Contract Name**: zkWikiX402
 - **Address**: `0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92`
 - **Network**: Arbitrum One (Mainnet)
 - **Chain ID**: 42161

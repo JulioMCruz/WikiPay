@@ -1,4 +1,4 @@
-# WikiPay Stylus Smart Contracts
+# zkWiki Stylus Smart Contracts
 
 Arbitrum Stylus (Rust/WASM) smart contracts for anonymous article payments.
 

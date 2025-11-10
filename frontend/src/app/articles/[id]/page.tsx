@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { getArticle, unlockArticle, checkIfUnlocked } from "@/lib/contract";
+import { getArticle, checkIfUnlocked, generateZkProof, generateTransferAuthorization, getWalletClient } from "@/lib/contract";
 import { simpleDecrypt } from "@/lib/encryption";
 import { useAccount } from "wagmi";
 import { formatEther } from "viem";
@@ -38,6 +38,14 @@ export default function ArticlePage() {
   const [showContentDialog, setShowContentDialog] = useState(false);
   const [unlockResult, setUnlockResult] = useState<any>(null);
   const [fullContent, setFullContent] = useState<string>("");
+
+  // x402 payment status
+  const [paymentStep, setPaymentStep] = useState<string>("");
+
+  // Helper: Format USDC price (6 decimals)
+  const formatUSDC = (amount: bigint) => {
+    return `$${(Number(amount) / 1_000_000).toFixed(2)}`;
+  };
 
   useEffect(() => {
     loadArticle();
@@ -117,47 +125,118 @@ export default function ArticlePage() {
 
     try {
       setUnlocking(true);
+      setPaymentStep("📋 Requesting payment details...");
 
-      // Call unlock with ZK proof
-      const result = await unlockArticle(BigInt(articleId), article.price);
+      // x402 Step 1: Request content (will get HTTP 402)
+      console.log("🔓 Starting x402 payment flow...");
+      const initialResponse = await fetch(`/api/articles/${articleId}`);
 
-      // Fetch IPFS content using article's ipfsHash
-      const ipfsUrl = `https://gateway.pinata.cloud/ipfs/${article.ipfsHash}`;
-
-      console.log("📥 Fetching content from IPFS:", ipfsUrl);
-
-      // Fetch full article from IPFS
-      const response = await fetch(ipfsUrl);
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch IPFS content: ${response.statusText}`);
+      if (initialResponse.status !== 402) {
+        throw new Error("Expected HTTP 402 Payment Required");
       }
 
-      const data = await response.json();
+      const paymentDetails = await initialResponse.json();
+      console.log("💳 Payment details received:", paymentDetails);
 
-      console.log("📄 IPFS data:", data);
+      // x402 Step 2: Create payment payload with EIP-3009 signature
+      setPaymentStep("🔐 Generating zero-knowledge proof...");
+      console.log("📝 Generating ZK proof and USDC authorization...");
 
-      // Decrypt content if encrypted, otherwise use plaintext
+      const { nullifier, proof } = await generateZkProof(BigInt(articleId));
+
+      setPaymentStep("✍️ Please sign USDC authorization in your wallet...");
+      const walletClient = await getWalletClient();
+      const [account] = await walletClient.getAddresses();
+
+      const validAfter = BigInt(Math.floor(Date.now() / 1000));
+      const validBefore = validAfter + BigInt(3600); // 1 hour validity
+      const nonce = nullifier;
+
+      const { v, r, s, signature } = await generateTransferAuthorization(
+        account,
+        paymentDetails.payment.creator as `0x${string}`,
+        BigInt(paymentDetails.payment.price),
+        validAfter,
+        validBefore,
+        nonce
+      );
+
+      console.log("Full signature from wallet:", signature);
+
+      const paymentPayload = {
+        articleId: Number(articleId),
+        nullifier,
+        proof,
+        from: account,
+        validAfter: Number(validAfter),
+        validBefore: Number(validBefore),
+        nonce,
+        v, r, s,
+        signature  // Include full signature
+      };
+
+      // x402 Step 3: Retry request with X-PAYMENT header
+      setPaymentStep(`🚀 Sending to x402 facilitator (${process.env.NEXT_PUBLIC_FACILITATOR_URL})...`);
+      console.log("🚀 Sending payment to facilitator...");
+
+      const paymentResponse = await fetch(`/api/articles/${articleId}`, {
+        method: 'GET',
+        headers: {
+          'X-PAYMENT': JSON.stringify(paymentPayload),
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!paymentResponse.ok) {
+        const error = await paymentResponse.json();
+        throw new Error(error.details || error.error || "Payment failed");
+      }
+
+      // x402 Step 4: Content delivered after payment verification
+      setPaymentStep("✅ Facilitator verified payment! Submitting to blockchain...");
+      const data = await paymentResponse.json();
+
+      console.log("✅ Payment verified by facilitator!");
+      console.log("Transaction:", data.payment.transactionHash);
+
+      // Decrypt content from IPFS
+      setPaymentStep("📥 Loading content from IPFS...");
+      const ipfsUrl = `https://gateway.pinata.cloud/ipfs/${data.content.ipfsHash}`;
+      const ipfsResponse = await fetch(ipfsUrl);
+
+      if (!ipfsResponse.ok) {
+        throw new Error(`Failed to fetch IPFS content: ${ipfsResponse.statusText}`);
+      }
+
+      const ipfsData = await ipfsResponse.json();
+
+      setPaymentStep("🔓 Decrypting content...");
       let content = "";
-      if (data.encrypted && data.iv && data.encryptionKey) {
+      if (ipfsData.encrypted && ipfsData.iv && ipfsData.encryptionKey) {
         console.log("🔓 Decrypting content...");
-        content = await simpleDecrypt(data.encrypted, data.iv, data.encryptionKey);
-        console.log("✅ Content decrypted successfully");
+        content = await simpleDecrypt(ipfsData.encrypted, ipfsData.iv, ipfsData.encryptionKey);
       } else {
-        content = data.content || data.fullContent || "Content structure not recognized";
+        content = ipfsData.content || ipfsData.fullContent || "";
       }
 
-      setUnlockResult(result);
+      setPaymentStep("🎉 Content unlocked successfully!");
+      setUnlockResult({
+        transactionHash: data.payment.transactionHash,
+        blockNumber: data.payment.blockNumber,
+        gasUsed: 0, // Facilitator paid gas, not user
+        facilitatorUrl: process.env.NEXT_PUBLIC_FACILITATOR_URL || 'facilitator',
+        paidAmount: data.payment.paidAmountUSD
+      });
       setFullContent(content);
       setIsUnlocked(true);
       setShowSuccessDialog(true);
 
-      // Reload article to update unlock count
       await loadArticle();
 
     } catch (err: any) {
-      console.error("Error unlocking article:", err);
+      console.error("❌ x402 payment error:", err);
       setError(err.message || "Failed to unlock article");
+      setPaymentStep("");
       setShowErrorDialog(true);
     } finally {
       setUnlocking(false);
@@ -228,7 +307,7 @@ export default function ArticlePage() {
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-2xl">Preview</CardTitle>
                   <Badge variant="secondary" className="text-lg px-4 py-2">
-                    {formatEther(article.price)} ETH
+                    {formatUSDC(article.price)} USDC
                   </Badge>
                 </div>
               </CardHeader>
@@ -286,7 +365,7 @@ export default function ArticlePage() {
                     <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/30 dark:to-blue-950/30 p-6 rounded-lg">
                       <h3 className="text-xl font-bold mb-2">🔒 Full Article Locked</h3>
                       <p className="text-slate-600 dark:text-slate-400 mb-4">
-                        Unlock the full content anonymously for {formatEther(article.price)} ETH
+                        Unlock the full content anonymously for {formatUSDC(article.price)} USDC (gasless)
                       </p>
                       {!isConnected ? (
                         <div>
@@ -302,7 +381,7 @@ export default function ArticlePage() {
                           disabled={unlocking}
                           className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                         >
-                          {unlocking ? "🔓 Unlocking..." : `🔓 Unlock Anonymously for ${formatEther(article.price)} ETH`}
+                          {unlocking ? "🔓 Processing x402 Payment..." : `🔓 Unlock for ${formatUSDC(article.price)} USDC (No Gas Fees)`}
                         </Button>
                       )}
                     </div>
@@ -354,7 +433,7 @@ export default function ArticlePage() {
                   <div className="flex justify-between items-center">
                     <span className="text-slate-600 dark:text-slate-400">Transaction:</span>
                     <a
-                      href={`https://sepolia.arbiscan.io/tx/${unlockResult.transactionHash}`}
+                      href={`https://arbiscan.io/tx/${unlockResult.transactionHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:underline font-mono"
@@ -367,19 +446,24 @@ export default function ArticlePage() {
                     <span className="font-mono">{unlockResult.blockNumber?.toString()}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-600 dark:text-slate-400">Gas Used:</span>
-                    <span className="font-mono">{unlockResult.gasUsed?.toString()}</span>
+                    <span className="text-slate-600 dark:text-slate-400">Network:</span>
+                    <span className="font-mono">Arbitrum One</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-600 dark:text-slate-400">Gas Paid By:</span>
+                    <span className="font-semibold text-green-600">x402 Facilitator ✓</span>
                   </div>
                 </div>
               )}
             </div>
 
             <div className="bg-purple-50 dark:bg-purple-950/30 p-4 rounded-lg space-y-2">
-              <p className="font-semibold text-sm">🛡️ Privacy Confirmed</p>
+              <p className="font-semibold text-sm">🛡️ x402 Protocol Features</p>
               <div className="text-xs space-y-1">
-                <p className="text-slate-600 dark:text-slate-400">✓ Your wallet address is hidden from the public</p>
                 <p className="text-slate-600 dark:text-slate-400">✓ Zero-knowledge proof verified on-chain</p>
-                <p className="text-slate-600 dark:text-slate-400">✓ Payment processed anonymously</p>
+                <p className="text-slate-600 dark:text-slate-400">✓ Payment processed anonymously via nullifier</p>
+                <p className="text-slate-600 dark:text-slate-400">✓ Gasless USDC payment (EIP-3009)</p>
+                <p className="text-slate-600 dark:text-slate-400">✓ Facilitator handled blockchain submission</p>
               </div>
             </div>
 

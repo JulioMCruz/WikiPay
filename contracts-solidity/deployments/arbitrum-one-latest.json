@@ -1,0 +1,10 @@
+{
+  "network": "arbitrum-one",
+  "chainId": 42161,
+  "contractAddress": "0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92",
+  "usdcAddress": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+  "deployer": "0xBD730613339499c114d12Eb41dcE3321376b90e5",
+  "timestamp": "2025-11-10T15:51:52.156Z",
+  "blockNumber": 398831658,
+  "transactionHash": "0x6c567c03037780ba8b1f104197b2b491c0e04b36a3ffc5e847c97d94f86afd25"
+}

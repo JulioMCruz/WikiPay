@@ -38,8 +38,8 @@
       ]
     },
     "/Users/osx/Projects/JulioMCruz/project-ideas-main/apps/wikipay-anonymous/contracts-solidity/contracts/WikiPayX402.sol": {
-      "lastModificationDate": 1762760240656,
-      "contentHash": "29360fa0c23ddd2c3a6e61f02e124602",
+      "lastModificationDate": 1762789870269,
+      "contentHash": "f9ab2b0f9e79ab28f7fc38bd1439265f",
       "sourceName": "contracts/WikiPayX402.sol",
       "solcConfig": {
         "version": "0.8.20",
@@ -70,7 +70,6 @@
         "^0.8.20"
       ],
       "artifacts": [
-        "IERC3009",
         "WikiPayX402"
       ]
     }

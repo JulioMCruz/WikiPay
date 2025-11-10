@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { getTotalArticles, getArticle } from "@/lib/contract";
-import { formatEther } from "viem";
 
 interface Article {
   id: number;
@@ -97,12 +96,9 @@ export default function ArticlesPage() {
     return preview.substring(0, 200) + (preview.length > 200 ? '...' : '');
   };
 
-  // Convert price from wei to USD
-  // Note: Contract stores USD values as ETH denomination (e.g., $0.05 stored as 0.05 ETH worth of wei)
-  const priceToUSD = (priceWei: bigint): string => {
-    const priceETH = parseFloat(formatEther(priceWei));
-    const priceUSD = priceETH * 3646.56; // Current ETH price: $3,646.56
-    return priceUSD.toFixed(2);
+  // Convert price from USDC (6 decimals) to USD string
+  const formatUSDC = (amount: bigint): string => {
+    return `${(Number(amount) / 1_000_000).toFixed(2)}`;
   };
 
   return (
@@ -199,7 +195,7 @@ export default function ArticlesPage() {
                 <CardHeader>
                   <div className="flex justify-between items-start mb-2">
                     <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                      ${priceToUSD(article.price)}
+                      ${formatUSDC(article.price)} USDC
                     </Badge>
                     <Badge variant="outline" className="text-xs">
                       {article.unlocks.toString()} unlocks

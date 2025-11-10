@@ -372,44 +372,6 @@ export default function PublishPage() {
           </p>
         </div>
 
-        {/* Example Templates */}
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-amber-50 to-orange-50/50 dark:from-amber-950/30 dark:to-orange-950/30 backdrop-blur-sm mb-8">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-3 mb-4">
-              <span className="text-2xl">💡</span>
-              <div className="flex-1">
-                <p className="font-semibold text-slate-900 dark:text-slate-100 mb-2">Try Example Articles</p>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                  Load pre-written examples to test the publishing system
-                </p>
-                <div className="flex gap-2 flex-wrap">
-                  <Button
-                    onClick={() => loadExample("x402")}
-                    variant="outline"
-                    className="bg-white dark:bg-slate-900"
-                  >
-                    📝 X402 Article (0.05 ETH)
-                  </Button>
-                  <Button
-                    onClick={() => loadExample("eip8004")}
-                    variant="outline"
-                    className="bg-white dark:bg-slate-900"
-                  >
-                    🌉 EIP-8004 Article (0.03 ETH)
-                  </Button>
-                  <Button
-                    onClick={() => loadExample("quickTest")}
-                    variant="outline"
-                    className="bg-white dark:bg-slate-900"
-                  >
-                    ⚡ Quick Test (0.01 ETH)
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         <div className="grid gap-8">
           {/* Article Form */}
           <Card className="border-0 shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">

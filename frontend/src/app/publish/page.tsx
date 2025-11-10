@@ -8,6 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { publishArticle } from "@/lib/contract";
 import { useAccount } from "wagmi";
@@ -79,6 +86,121 @@ The future isn't multi-chain - it's omnichain. And X402 is building that future 
 *Disclaimer: This article is for informational purposes only and does not constitute financial advice.*`,
     price: "0.05"
   },
+  eip8004: {
+    title: "EIP-8004: Universal Token Bridge Standard",
+    preview: "EIP-8004 proposes a standardized approach to token bridging across EVM-compatible chains. By establishing a common interface and security framework, it aims to eliminate the fragmentation in current bridge implementations and reduce the risk of exploits. Discover how this proposal could reshape the multi-chain ecosystem.",
+    content: `The Ethereum ecosystem has evolved into a complex multi-chain landscape. With dozens of Layer 2 solutions and sidechains, users face a fragmented experience when moving assets between networks. Each bridge implementation differs, creating security risks and poor user experiences.
+
+EIP-8004 aims to solve this fundamental problem.
+
+## The Bridge Fragmentation Problem
+
+Today's landscape is chaotic:
+
+- **50+ Bridge Implementations**: Each with different security models, interfaces, and trust assumptions
+- **$2.5B+ Lost to Exploits**: Bridge vulnerabilities have become the #1 attack vector in DeFi
+- **Inconsistent UX**: Users must learn different interfaces for each bridge
+- **Liquidity Fragmentation**: Assets are split across incompatible bridge implementations
+
+EIP-8004 addresses these issues through standardization.
+
+## Core Components of EIP-8004
+
+### 1. Universal Bridge Interface
+
+A standardized smart contract interface that all bridges must implement:
+
+\`\`\`solidity
+interface IEIP8004Bridge {
+    function lockAndBridge(
+        address token,
+        uint256 amount,
+        uint256 targetChainId,
+        address recipient
+    ) external returns (bytes32 bridgeId);
+
+    function claimBridgedTokens(
+        bytes32 bridgeId,
+        bytes calldata proof
+    ) external returns (bool);
+
+    function emergencyWithdraw(
+        bytes32 bridgeId
+    ) external returns (bool);
+}
+\`\`\`
+
+### 2. Security Framework
+
+EIP-8004 mandates specific security requirements:
+
+**Multi-Validator Consensus**: Minimum 7 independent validators must sign bridge transactions
+**Timelock Mechanism**: All bridging operations have a 24-hour challenge period
+**Insurance Pool**: Bridges must maintain reserves equal to 10% of TVL
+**Emergency Pause**: Circuit breakers that halt operations if suspicious activity detected
+
+### 3. Proof Verification Standard
+
+The proposal introduces a standardized proof system for cross-chain verification:
+
+- **Merkle Proofs**: Standard format for state verification
+- **Finality Requirements**: Minimum block confirmations based on chain security
+- **Fraud Proof Window**: 7-day challenge period for optimistic bridges
+
+## Benefits for the Ecosystem
+
+### For Users
+
+**Simplified Experience**: One interface to bridge between all supported chains
+**Enhanced Security**: Standardized security requirements reduce exploit risks
+**Better Transparency**: Uniform monitoring and auditing across all bridges
+**Guaranteed Liquidity**: Standardized liquidity pools eliminate fragmentation
+
+### For Developers
+
+**Reduced Integration Work**: Build once, support all EIP-8004 bridges
+**Interoperability**: Tokens bridged through any compliant implementation are compatible
+**Security Guarantees**: Compliance means meeting minimum security standards
+**Innovation Space**: Standard interface allows for competing implementations
+
+## Technical Implementation
+
+The bridging flow operates through a multi-step process:
+
+1. **Lock Phase**: User locks tokens on source chain
+2. **Proof Generation**: Validators create merkle proof of lock transaction
+3. **Consensus**: Minimum validator threshold must sign proof
+4. **Challenge Period**: 24-hour window for fraud proofs
+5. **Claim Phase**: User claims tokens on destination chain using proof
+
+## Real-World Impact
+
+If widely adopted, EIP-8004 could:
+
+- Eliminate bridge fragmentation through universal compatibility
+- Reduce exploits by 80%+ via standardized security
+- Lower bridging costs through competitive pressure
+- Enable new cross-chain applications
+
+## Current Status & Adoption
+
+EIP-8004 is currently in "Review" status (as of November 2024):
+
+**Supporting Projects**:
+- Arbitrum: Committed to implementation in Q1 2025
+- Optimism: Evaluating for OP Stack chains
+- Polygon: zkEVM integration planned
+- Base: Coinbase exploring native support
+
+## Conclusion
+
+The multi-chain future is inevitable. EIP-8004 offers a path toward secure, interoperable, and user-friendly cross-chain value transfer. The next phase of blockchain adoption depends on solving the bridge problem - and this proposal might be the solution.
+
+---
+
+*Disclaimer: This article is for educational purposes. Always do your own research before using any bridge protocol.*`,
+    price: "0.03"
+  },
   quickTest: {
     title: "Quick Test Article: Hello Web3",
     preview: "This is a short test article to verify the WikiPay publishing system. It demonstrates the anonymous payment flow and content unlocking mechanism.",
@@ -118,6 +240,9 @@ export default function PublishPage() {
   const [price, setPrice] = useState("0.05");
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishResult, setPublishResult] = useState<any>(null);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const loadExample = (exampleKey: keyof typeof exampleArticles) => {
     const example = exampleArticles[exampleKey];
@@ -136,13 +261,16 @@ export default function PublishPage() {
 
     // Check wallet connection
     if (!isConnected) {
-      alert("Please connect your wallet first!");
+      setErrorMessage("Please connect your wallet first!");
+      setShowErrorDialog(true);
       return;
     }
 
     try {
       setIsPublishing(true);
       setPublishResult(null);
+      setShowSuccessDialog(false);
+      setShowErrorDialog(false);
       console.log("📝 Publishing state set to true");
 
       // Step 1: Encrypt content
@@ -181,12 +309,12 @@ export default function PublishPage() {
       console.log("IPFS hash:", ipfsHash);
 
       setPublishResult({ ...result, ipfsHash });
-
-      alert(`Article published successfully!\n\nTransaction: ${result.transactionHash.slice(0, 10)}...\nIPFS: ${ipfsHash.slice(0, 15)}...`);
+      setShowSuccessDialog(true);
 
     } catch (error: any) {
       console.error("❌ Error publishing article:", error);
-      alert(`Error publishing article:\n${error.message || "Unknown error"}`);
+      setErrorMessage(error.message || "Unknown error occurred");
+      setShowErrorDialog(true);
     } finally {
       setIsPublishing(false);
       console.log("📝 Publishing state set to false");
@@ -243,14 +371,21 @@ export default function PublishPage() {
                     variant="outline"
                     className="bg-white dark:bg-slate-900"
                   >
-                    📝 X402 Article (Detailed)
+                    📝 X402 Article (0.05 ETH)
+                  </Button>
+                  <Button
+                    onClick={() => loadExample("eip8004")}
+                    variant="outline"
+                    className="bg-white dark:bg-slate-900"
+                  >
+                    🌉 EIP-8004 Article (0.03 ETH)
                   </Button>
                   <Button
                     onClick={() => loadExample("quickTest")}
                     variant="outline"
                     className="bg-white dark:bg-slate-900"
                   >
-                    ⚡ Quick Test (Short)
+                    ⚡ Quick Test (0.01 ETH)
                   </Button>
                 </div>
               </div>
@@ -458,6 +593,93 @@ export default function PublishPage() {
           </Card>
         </div>
       </div>
+
+      {/* Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-green-600">
+              <span className="text-2xl">✅</span>
+              Article Published Successfully!
+            </DialogTitle>
+            <DialogDescription className="space-y-3 pt-4">
+              <div className="bg-green-50 dark:bg-green-950/30 p-4 rounded-lg space-y-2">
+                <p className="font-semibold text-sm">Transaction Details</p>
+                {publishResult && (
+                  <>
+                    <div className="space-y-1 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-slate-600 dark:text-slate-400">Transaction:</span>
+                        <a
+                          href={`https://sepolia.arbiscan.io/tx/${publishResult.transactionHash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline font-mono"
+                        >
+                          {publishResult.transactionHash.slice(0, 10)}...
+                        </a>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600 dark:text-slate-400">IPFS Hash:</span>
+                        <a
+                          href={`https://gateway.pinata.cloud/ipfs/${publishResult.ipfsHash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline font-mono"
+                        >
+                          {publishResult.ipfsHash.slice(0, 15)}...
+                        </a>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600 dark:text-slate-400">Gas Used:</span>
+                        <span className="font-mono">{publishResult.gasUsed?.toString()}</span>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Your article is now live and ready to earn! Readers can discover and unlock it anonymously.
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 mt-4">
+            <Button onClick={() => setShowSuccessDialog(false)} className="flex-1">
+              Close
+            </Button>
+            <Link href="/" className="flex-1">
+              <Button variant="outline" className="w-full">
+                View Articles
+              </Button>
+            </Link>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Error Dialog */}
+      <Dialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <span className="text-2xl">❌</span>
+              Publishing Failed
+            </DialogTitle>
+            <DialogDescription className="space-y-3 pt-4">
+              <div className="bg-red-50 dark:bg-red-950/30 p-4 rounded-lg">
+                <p className="text-sm text-red-900 dark:text-red-100 font-mono">
+                  {errorMessage}
+                </p>
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Please try again or contact support if the issue persists.
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <Button onClick={() => setShowErrorDialog(false)}>
+            Close
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

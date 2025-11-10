@@ -1,4 +1,4 @@
-# WikiPay Storage Architecture
+# zkWiki Storage Architecture
 
 ## Problem
 Storing article content on-chain is prohibitively expensive:
@@ -108,14 +108,14 @@ await publishArticle({ preview, ipfsHash: cid, price });
 
 ### Current Contract (3KB storage)
 ```rust
-pub struct WikiPayContract {
+pub struct zkWikiContract {
     mapping(uint256 => string) encrypted_content; // ❌ Expensive!
 }
 ```
 
 ### Updated Contract (46 bytes storage)
 ```rust
-pub struct WikiPayContract {
+pub struct zkWikiContract {
     mapping(uint256 => string) ipfs_hashes; // ✅ 98% cheaper!
 }
 

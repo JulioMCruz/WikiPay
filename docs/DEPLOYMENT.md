@@ -1,4 +1,4 @@
-# WikiPay Arbitrum Stylus - Deployment Guide
+# zkWiki Arbitrum Stylus - Deployment Guide
 
 ## Current Production Contract ✅
 

@@ -2,7 +2,7 @@
 
 ## Quick Recommendation
 
-**For WikiPay MVP**: Use **Pinata** (free tier, easy setup, 5 minutes to integrate)
+**For zkWiki MVP**: Use **Pinata** (free tier, easy setup, 5 minutes to integrate)
 **For Production**: Migrate to **Web3.Storage** (free unlimited, backed by Filecoin)
 
 ## Detailed Comparison

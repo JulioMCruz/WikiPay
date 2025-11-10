@@ -1,8 +1,8 @@
-# WikiPayX402 - Strict x402 Protocol Implementation Summary
+# zkWikiX402 - Strict x402 Protocol Implementation Summary
 
 ## 🎯 What We Built
 
-**WikiPayX402** - The first production-ready x402 payment facilitator using:
+**zkWikiX402** - The first production-ready x402 payment facilitator using:
 - ✅ **Arbitrum One mainnet** (Layer 2, low gas fees)
 - ✅ **Circle USDC** with **EIP-3009** (gasless payments)
 - ✅ **HTTP 402 Payment Required** (strict protocol compliance)
@@ -12,7 +12,7 @@
 ## 📋 Files Created
 
 ### 1. Smart Contract
-**Location**: `contracts-solidity/contracts/WikiPayX402.sol`
+**Location**: `contracts-solidity/contracts/zkWikiX402.sol`
 
 **Key Features**:
 ```solidity
@@ -73,7 +73,7 @@ defaultNetwork: "arbitrumOne"
 
 | Parameter | Value |
 |-----------|-------|
-| **Contract Name** | WikiPayX402 |
+| **Contract Name** | zkWikiX402 |
 | **Network** | Arbitrum One (Mainnet) |
 | **Chain ID** | 42161 |
 | **USDC Address** | 0xaf88d065e77c8cC2239327C5EDb3A432268e5831 |
@@ -135,9 +135,9 @@ npx hardhat verify --network arbitrumOne YOUR_CONTRACT_ADDRESS
 ### Expected Output
 
 ```
-🚀 Deploying WikiPayX402 to Arbitrum One Mainnet...
+🚀 Deploying zkWikiX402 to Arbitrum One Mainnet...
 
-✅ WikiPayX402 deployed to: 0x...
+✅ zkWikiX402 deployed to: 0x...
 💵 USDC Address: 0xaf88d065e77c8cC2239327C5EDb3A432268e5831
 ✅ USDC verified: Circle USDC with EIP-3009 support
 
@@ -171,7 +171,7 @@ X-Payment-Amount: 10000 USDC
 GET /api/articles/1?full=true HTTP/1.1
 
 HTTP/1.1 402 Payment Required
-WWW-Authenticate: Ethereum-ZK realm="WikiPay", contract="0x..."
+WWW-Authenticate: Ethereum-ZK realm="zkWiki", contract="0x..."
 X-Payment-Amount: 10000 USDC
 X-Payment-Network: arbitrum-one
 X-Payment-ChainId: 42161
@@ -255,7 +255,7 @@ Most "paywalls" just redirect to a payment page. We return **actual HTTP 402** w
 
 ```http
 HTTP/1.1 402 Payment Required
-WWW-Authenticate: Ethereum-ZK realm="WikiPay"
+WWW-Authenticate: Ethereum-ZK realm="zkWiki"
 ```
 
 ### 2. **Standard-Compliant Headers**
@@ -293,7 +293,7 @@ USDC pricing ensures:
 
 ## 📊 Comparison: Traditional vs x402
 
-| Feature | Traditional Paywall | WikiPayX402 |
+| Feature | Traditional Paywall | zkWikiX402 |
 |---------|-------------------|-------------|
 | **HTTP Status** | 301 Redirect | 402 Payment Required |
 | **Identity** | Email required | Anonymous (ZK) |
@@ -376,13 +376,13 @@ USDC pricing ensures:
 - **X402 Protocol**: X402-IMPLEMENTATION.md
 - **Arbitrum Guide**: ARBITRUM-X402-FACILITATOR.md
 - **Deployment**: ARBITRUM-ONE-DEPLOYMENT.md
-- **Contract Code**: contracts-solidity/contracts/WikiPayX402.sol
+- **Contract Code**: contracts-solidity/contracts/zkWikiX402.sol
 
 ## 🎯 Claiming x402 Compliance
 
 You can officially claim:
 
-> **"WikiPay is a fully compliant x402 payment facilitator using Arbitrum One and Circle USDC (EIP-3009) for decentralized content monetization with HTTP 402 Payment Required protocol."**
+> **"zkWiki is a fully compliant x402 payment facilitator using Arbitrum One and Circle USDC (EIP-3009) for decentralized content monetization with HTTP 402 Payment Required protocol."**
 
 **Evidence**:
 1. ✅ HTTP 402 status codes in API responses
@@ -397,4 +397,4 @@ You can officially claim:
 
 **Built with ❤️ for the decentralized web**
 
-**WikiPayX402** - Where HTTP 402 meets Web3 🚀
+**zkWikiX402** - Where HTTP 402 meets Web3 🚀

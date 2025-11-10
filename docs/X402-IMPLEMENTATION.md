@@ -1,8 +1,8 @@
-# WikiPay x402 Protocol Implementation
+# zkWiki x402 Protocol Implementation
 
 ## Overview
 
-WikiPay implements the **HTTP 402 Payment Required** protocol for decentralized content monetization using blockchain-based micropayments and zero-knowledge proofs.
+zkWiki implements the **HTTP 402 Payment Required** protocol for decentralized content monetization using blockchain-based micropayments and zero-knowledge proofs.
 
 ## What is x402?
 
@@ -10,9 +10,9 @@ WikiPay implements the **HTTP 402 Payment Required** protocol for decentralized 
 
 **x402** is the modern implementation of this vision using Web3 technology.
 
-## WikiPay as x402 Facilitator
+## zkWiki as x402 Facilitator
 
-WikiPay acts as a **decentralized 402 payment facilitator** that enables:
+zkWiki acts as a **decentralized 402 payment facilitator** that enables:
 
 1. ✅ **Content Monetization** - Creators publish paywalled content
 2. ✅ **Micropayments** - Sub-dollar payments via cryptocurrency
@@ -56,7 +56,7 @@ Accept: application/json
 
 HTTP/1.1 402 Payment Required
 Content-Type: application/json
-WWW-Authenticate: Ethereum-ZK realm="WikiPay", contract="0x37e47cd8e4a5C735d1eD304a9C17968f05Ce07fb"
+WWW-Authenticate: Ethereum-ZK realm="zkWiki", contract="0x37e47cd8e4a5C735d1eD304a9C17968f05Ce07fb"
 X-Payment-Amount: 0.03 ETH
 X-Payment-Network: arbitrum-sepolia
 X-Payment-ChainId: 421614
@@ -127,7 +127,7 @@ X-Content-Status: unlocked
 ### Smart Contract (x402 Verification)
 
 ```solidity
-contract WikiPay {
+contract zkWiki {
     // 402 Payment tracking
     mapping(bytes32 => bool) public nullifiersUsed;
 
@@ -195,7 +195,7 @@ async function handlePaymentRequired(articleId: number) {
 
 **Standard 402**: Exposes user identity to payment processor
 
-**x402 (WikiPay)**: Uses ZK nullifiers - wallet address never revealed on-chain
+**x402 (zkWiki)**: Uses ZK nullifiers - wallet address never revealed on-chain
 
 ```typescript
 // Deterministic nullifier = hash(wallet_address + article_id)
@@ -209,7 +209,7 @@ const proof = await wallet.signMessage(`Unlock Article ${articleId}`);
 
 **Standard 402**: Payment tied to single session/cookie
 
-**x402 (WikiPay)**: Payment verified on-chain - works on any device
+**x402 (zkWiki)**: Payment verified on-chain - works on any device
 
 ```typescript
 // Device A: Pay and unlock
@@ -223,7 +223,7 @@ const isUnlocked = await isNullifierUsed(nullifier); // true
 
 **Standard 402**: Centralized payment processor
 
-**x402 (WikiPay)**: Blockchain-verified payments
+**x402 (zkWiki)**: Blockchain-verified payments
 
 - ✅ No payment processor fees
 - ✅ Censorship-resistant
@@ -244,7 +244,7 @@ X-Payment-Network: arbitrum-sepolia
 
 ```
 HTTP/1.1 402 Payment Required
-WWW-Authenticate: Ethereum-ZK realm="WikiPay"
+WWW-Authenticate: Ethereum-ZK realm="zkWiki"
 X-Payment-Required: true
 X-Payment-Amount: 0.03 ETH
 X-Payment-Address: 0x37e47cd8e4a5C735d1eD304a9C17968f05Ce07fb
@@ -287,7 +287,7 @@ X-Nullifier: 0x...
 
 ## x402 vs Traditional Paywalls
 
-| Feature | Traditional Paywall | x402 (WikiPay) |
+| Feature | Traditional Paywall | x402 (zkWiki) |
 |---------|-------------------|----------------|
 | **Identity** | Email/username required | Anonymous (ZK proofs) |
 | **Payment** | Credit card/PayPal | Cryptocurrency |
@@ -341,7 +341,7 @@ function unlockWithRoyalties(
 
 ## Claiming x402 Compliance
 
-WikiPay is **x402 compliant** because it implements:
+zkWiki is **x402 compliant** because it implements:
 
 ✅ **HTTP 402 Status Code** - Returns 402 for payment-required content
 ✅ **Payment Verification** - Blockchain-based proof of payment
@@ -353,7 +353,7 @@ WikiPay is **x402 compliant** because it implements:
 
 ### Positioning Statement
 
-> **"WikiPay: The first decentralized x402 facilitator for Web3"**
+> **"zkWiki: The first decentralized x402 facilitator for Web3"**
 >
 > Enabling privacy-preserving content monetization through blockchain-verified HTTP 402 payments.
 
@@ -375,6 +375,6 @@ WikiPay is **x402 compliant** because it implements:
 
 ## Conclusion
 
-WikiPay implements the **x402 protocol** - a modern, decentralized evolution of HTTP 402 Payment Required. By combining blockchain verification with zero-knowledge proofs, it creates a privacy-preserving, censorship-resistant content monetization system.
+zkWiki implements the **x402 protocol** - a modern, decentralized evolution of HTTP 402 Payment Required. By combining blockchain verification with zero-knowledge proofs, it creates a privacy-preserving, censorship-resistant content monetization system.
 
-**WikiPay = Web3 + HTTP 402 = x402** 🚀
+**zkWiki = Web3 + HTTP 402 = x402** 🚀

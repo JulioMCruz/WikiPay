@@ -1,4 +1,4 @@
-# WikiPay Payment System - Current Status
+# zkWiki Payment System - Current Status
 
 **Date**: November 10, 2025
 **Status**: ✅ **Browsing Works** | ❌ **Payment Requires Facilitator**
@@ -39,7 +39,7 @@ GET http://localhost:3005/api/verify-and-settle
 
 ```
 ┌─────────────┐      ┌──────────────────┐      ┌─────────────────┐
-│   Browser   │      │  WikiPay x402    │      │  Arbitrum One   │
+│   Browser   │      │  zkWiki x402    │      │  Arbitrum One   │
 │   (User)    │─────▶│   Facilitator    │─────▶│   (Blockchain)  │
 │             │ 402  │   (MISSING!)     │ Tx   │                 │
 └─────────────┘      └──────────────────┘      └─────────────────┘

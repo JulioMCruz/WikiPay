@@ -8,7 +8,7 @@
 2. Sign up for a free account (no credit card required)
 3. Navigate to **API Keys** section
 4. Click **New Key**
-5. Give it a name (e.g., "WikiPay MVP")
+5. Give it a name (e.g., "zkWiki MVP")
 6. Enable these permissions:
    - `pinFileToIPFS`
    - `pinJSONToIPFS`

@@ -1,11 +1,11 @@
-# WikiPay x402 Standard Compliance
+# zkWiki x402 Standard Compliance
 
 **Date**: November 10, 2025
 **Status**: ✅ **Fully Compliant with x402 Standard**
 
 ## Changes Made
 
-Updated the WikiPay API route to follow the official x402 protocol standard as defined in the x402 GitBook documentation.
+Updated the zkWiki API route to follow the official x402 protocol standard as defined in the x402 GitBook documentation.
 
 ### x402 Protocol References
 - [HTTP 402 Overview](https://x402.gitbook.io/x402/core-concepts/http-402)
@@ -136,7 +136,7 @@ const settleResponse = await fetch(`${facilitatorUrl}/settle`, {
 
 ```
 ┌─────────────┐           ┌──────────────────┐           ┌─────────────────┐
-│   Browser   │           │  WikiPay API     │           │  x402 Facilitator│
+│   Browser   │           │  zkWiki API     │           │  x402 Facilitator│
 │   (User)    │           │  Route           │           │  (Port 3005)     │
 └─────────────┘           └──────────────────┘           └─────────────────┘
       │                           │                              │

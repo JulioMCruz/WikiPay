@@ -1,4 +1,4 @@
-# WikiPay Contract Testing Commands
+# zkWiki Contract Testing Commands
 
 ## Contract Information
 - **Address**: `0x5748ebaaa22421de872ed8b3be61fc1ac66f3e92`

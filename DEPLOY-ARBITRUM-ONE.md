@@ -1,7 +1,7 @@
-# Deploy WikiPayX402 to Arbitrum One Mainnet
+# Deploy zkWikiX402 to Arbitrum One Mainnet
 
 ## Contract Location
-`contracts/solidity/WikiPayX402.sol`
+`contracts/solidity/zkWikiX402.sol`
 
 ## Deployment Steps Using Remix
 
@@ -9,14 +9,14 @@
 Go to: https://remix.ethereum.org/
 
 ### 2. Upload Contract
-- Create new file: `WikiPayX402.sol`
-- Copy the contract code from `contracts/solidity/WikiPayX402.sol`
+- Create new file: `zkWikiX402.sol`
+- Copy the contract code from `contracts/solidity/zkWikiX402.sol`
 - Paste into Remix
 
 ### 3. Compile Contract
 - Click "Solidity Compiler" tab (left sidebar)
 - Select compiler version: `0.8.20` or higher
-- Click "Compile WikiPayX402.sol"
+- Click "Compile zkWikiX402.sol"
 - Verify no errors
 
 ### 4. Connect Wallet to Arbitrum One
@@ -31,7 +31,7 @@ Go to: https://remix.ethereum.org/
   - Block Explorer: https://arbiscan.io
 
 ### 5. Deploy Contract
-- Contract: Select `WikiPayX402`
+- Contract: Select `zkWikiX402`
 - Constructor Parameters:
   - `_usdcAddress`: `0xaf88d065e77c8cC2239327C5EDb3A432268e5831`
     (This is Circle USDC on Arbitrum One with EIP-3009 support)
@@ -53,7 +53,7 @@ If you prefer command line:
 ```bash
 # Deploy contract
 cast send --create \
-  $(cat contracts/solidity/WikiPayX402.sol | solc --bin - | tail -1) \
+  $(cat contracts/solidity/zkWikiX402.sol | solc --bin - | tail -1) \
   "constructor(address)" \
   "0xaf88d065e77c8cC2239327C5EDb3A432268e5831" \
   --private-key <YOUR_PRIVATE_KEY> \

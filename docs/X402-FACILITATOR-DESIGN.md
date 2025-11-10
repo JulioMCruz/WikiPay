@@ -1,14 +1,14 @@
-# WikiPay x402 Facilitator Design
+# zkWiki x402 Facilitator Design
 
 ## Overview
 
-The **WikiPay x402 Facilitator** is a backend service that processes HTTP 402 payment requests by submitting gasless USDC transactions to Arbitrum One on behalf of users.
+The **zkWiki x402 Facilitator** is a backend service that processes HTTP 402 payment requests by submitting gasless USDC transactions to Arbitrum One on behalf of users.
 
 ## Architecture
 
 ```
 ┌─────────────┐           ┌──────────────────┐           ┌─────────────────┐
-│   Browser   │  HTTP 402 │  WikiPay x402    │  Submit   │  Arbitrum One   │
+│   Browser   │  HTTP 402 │  zkWiki x402    │  Submit   │  Arbitrum One   │
 │   (User)    │  ────────▶│   Facilitator    │  ────────▶│   (Blockchain)  │
 │             │  Request  │   (Backend)      │   Tx      │                 │
 └─────────────┘           └──────────────────┘           └─────────────────┘
@@ -31,14 +31,14 @@ The **WikiPay x402 Facilitator** is a backend service that processes HTTP 402 pa
       │    Content delivered      │                              │
 ```
 
-## Component: WikiPay x402 Facilitator
+## Component: zkWiki x402 Facilitator
 
 ### Identity
-**Name**: WikiPay x402 Facilitator
+**Name**: zkWiki x402 Facilitator
 **Type**: Backend API Service
 **Protocol**: HTTP 402 Payment Required
 **Blockchain**: Arbitrum One (Chain ID: 42161)
-**Contract**: `0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92` (WikiPayX402)
+**Contract**: `0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92` (zkWikiX402)
 
 ### Responsibilities
 
@@ -284,11 +284,11 @@ ARBITRUM_ONE_RPC=https://arb1.arbitrum.io/rpc
 - Premium pricing
 - Overkill for simple use case
 
-**Recommendation**: Start with self-hosted WikiPay x402 Facilitator for cost and control, migrate to Gelato if volume exceeds 100K/month.
+**Recommendation**: Start with self-hosted zkWiki x402 Facilitator for cost and control, migrate to Gelato if volume exceeds 100K/month.
 
 ## Deployment Checklist
 
-- [ ] Deploy WikiPayX402 contract (✅ Done: `0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92`)
+- [ ] Deploy zkWikiX402 contract (✅ Done: `0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92`)
 - [ ] Generate facilitator wallet
 - [ ] Fund facilitator wallet with 0.01 ETH
 - [ ] Implement `/api/x402/unlock` endpoint
@@ -313,4 +313,4 @@ ARBITRUM_ONE_RPC=https://arb1.arbitrum.io/rpc
 **Contract**: `0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92`
 **Network**: Arbitrum One (42161)
 **Protocol**: HTTP 402 Payment Required (x402)
-**Facilitator**: WikiPay Backend (pays gas for users)
+**Facilitator**: zkWiki Backend (pays gas for users)

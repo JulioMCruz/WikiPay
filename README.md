@@ -1,4 +1,4 @@
-# WikiPay Anonymous - x402 Protocol Implementation
+# zkWiki Anonymous - x402 Protocol Implementation
 
 **Gasless anonymous micropayments for content creators using x402 protocol**
 
@@ -8,7 +8,7 @@ Pay $0.01-0.10 per article **without gas fees** using x402 HTTP 402 Payment Requ
 
 | Component | Address/URL | Network | Protocol |
 |-----------|-------------|---------|----------|
-| WikiPay Contract | [`0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92`](https://arbiscan.io/address/0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92) | Arbitrum One | Solidity |
+| zkWiki Contract | [`0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92`](https://arbiscan.io/address/0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92) | Arbitrum One | Solidity |
 | USDC Contract | [`0xaf88d065e77c8cC2239327C5EDb3A432268e5831`](https://arbiscan.io/address/0xaf88d065e77c8cC2239327C5EDb3A432268e5831) | Arbitrum One | EIP-3009 |
 | x402 Facilitator | `http://localhost:3005` | Local | x402 Standard |
 
@@ -40,7 +40,7 @@ graph TB
     end
 
     subgraph "Blockchain Layer - Arbitrum One Mainnet"
-        WP[WikiPay Contract<br/>Solidity<br/>0x5748...3e92]
+        WP[zkWiki Contract<br/>Solidity<br/>0x5748...3e92]
         USDC[Circle USDC<br/>EIP-3009<br/>0xaf88...8831]
     end
 
@@ -122,7 +122,7 @@ sequenceDiagram
     participant Wallet as Wallet
     participant FAC as x402 Facilitator
     participant USDC as Circle USDC
-    participant Contract as WikiPay Contract
+    participant Contract as zkWiki Contract
     participant IPFS as IPFS Storage
 
     Reader->>UI: Browse articles
@@ -390,7 +390,7 @@ flowchart TD
 
 ## 💳 x402 Payment Protocol
 
-WikiPay implements the [x402 standard](https://www.x402.org/) - HTTP 402 Payment Required for web payments.
+zkWiki implements the [x402 standard](https://www.x402.org/) - HTTP 402 Payment Required for web payments.
 
 ### How x402 Works
 
@@ -463,7 +463,7 @@ wikipay-anonymous/
 │   └── package.json
 ├── contracts/                   # ✅ Arbitrum Stylus (Rust/WASM)
 │   ├── src/
-│   │   └── lib.rs              # Main WikiPay contract (188 lines)
+│   │   └── lib.rs              # Main zkWiki contract (188 lines)
 │   ├── Cargo.toml              # Rust dependencies
 │   ├── rust-toolchain.toml     # Rust 1.91.0
 │   ├── .cargo/config.toml      # WASM build config
@@ -660,10 +660,10 @@ npm run build
 - **selfx402-framework**: x402 facilitator implementation
 
 ### Smart Contracts
-- **Solidity**: WikiPay contract on Arbitrum One mainnet
+- **Solidity**: zkWiki contract on Arbitrum One mainnet
 - **Arbitrum One (42161)**: L2 mainnet deployment
 - **USDC Contract**: `0xaf88d065e77c8cC2239327C5EDb3A432268e5831`
-- **WikiPay Contract**: `0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92`
+- **zkWiki Contract**: `0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92`
 
 ### Privacy & Security
 - **Deterministic Nullifiers**: keccak256(wallet || article || nonce)

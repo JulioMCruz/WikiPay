@@ -1,4 +1,4 @@
-# WikiPay Stylus Contract Deployment
+# zkWiki Stylus Contract Deployment
 
 ## Deployment Information
 
@@ -26,7 +26,7 @@
 
 ## Contract Functions
 
-The WikiPay contract implements the following functions:
+The zkWiki contract implements the following functions:
 
 1. `publishArticle(string preview, string encrypted_content, uint256 price) → uint256` - Publish a new article
 2. `unlockArticleAnonymous(uint256 article_id, bytes32 nullifier, bytes proof) payable → string` - Unlock article with zero-knowledge proof

@@ -1,6 +1,6 @@
-# WikiPay Example Articles
+# zkWiki Example Articles
 
-This directory contains example articles for testing the WikiPay anonymous publishing system.
+This directory contains example articles for testing the zkWiki anonymous publishing system.
 
 ## Available Examples
 
@@ -13,7 +13,7 @@ This directory contains example articles for testing the WikiPay anonymous publi
 
 ### 2. Quick Test Article
 **File:** `quick-test-article.md`
-- **Topic:** WikiPay system overview
+- **Topic:** zkWiki system overview
 - **Length:** ~2 minute read, ~200 words
 - **Price:** $0.01
 - **Use Case:** Quick testing of publish/unlock flow

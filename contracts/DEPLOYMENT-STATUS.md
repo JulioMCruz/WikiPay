@@ -1,4 +1,4 @@
-# WikiPay Stylus Contract - Current Status ✅
+# zkWiki Stylus Contract - Current Status ✅
 
 ## Production Contract (Working)
 

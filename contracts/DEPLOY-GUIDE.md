@@ -1,4 +1,4 @@
-# WikiPay Contract Deployment Guide
+# zkWiki Contract Deployment Guide
 
 ## Quick Deployment
 

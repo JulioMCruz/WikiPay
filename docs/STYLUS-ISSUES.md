@@ -2,7 +2,7 @@
 
 ## Summary
 
-WikiPay initially attempted to use **Arbitrum Stylus (Rust/WASM)** for lower gas costs but encountered a critical unresolved bug. Migrated to **Solidity 0.8.20** as a stable, battle-tested alternative.
+zkWiki initially attempted to use **Arbitrum Stylus (Rust/WASM)** for lower gas costs but encountered a critical unresolved bug. Migrated to **Solidity 0.8.20** as a stable, battle-tested alternative.
 
 ## Stylus SDK Issue #261
 
@@ -31,7 +31,7 @@ Error: server returned an error response: error code 3: execution reverted, data
 
 ### Failed Deployments
 
-- `0x321313862c7e30330290d11ee20af2a273e8d76a` - Full WikiPay with mappings
+- `0x321313862c7e30330290d11ee20af2a273e8d76a` - Full zkWiki with mappings
 - `0x7728b334691d8a0da4522c2f4453115faca9916f` - Composition pattern
 - `0x9806a6067a3ef5b7356327eb18e55ce0e3e835f5` - uint256 mapping only
 - `0x44105ef926818bbbab0280246915e9c74a57cf50` - Zero mappings
@@ -73,7 +73,7 @@ Error: server returned an error response: error code 3: execution reverted, data
 
 ### 1. Created Solidity Contract
 
-[WikiPay.sol](contracts-solidity/contracts/WikiPay.sol) - Full-featured implementation with:
+[zkWiki.sol](contracts-solidity/contracts/zkWiki.sol) - Full-featured implementation with:
 - Article struct with IPFS hash, preview, price, creator
 - Publish/unlock article functions
 - Creator earnings withdrawal
@@ -92,8 +92,8 @@ npx hardhat run scripts/deploy.js --network arbitrumSepolia
 
 ```javascript
 // scripts/deploy.js
-const WikiPay = await hre.ethers.getContractFactory("WikiPay");
-const wikipay = await WikiPay.deploy();
+const zkWiki = await hre.ethers.getContractFactory("zkWiki");
+const wikipay = await zkWiki.deploy();
 ```
 
 ### 4. Frontend Update
@@ -149,7 +149,7 @@ When Stylus SDK is fixed:
 
 ## Conclusion
 
-While Stylus promises significant gas savings, **SDK maturity issues make Solidity the pragmatic choice** for WikiPay's production deployment. The ~$0.0008 per article publish cost on Arbitrum is already excellent, and the stability/tooling benefits of Solidity outweigh theoretical gas optimizations.
+While Stylus promises significant gas savings, **SDK maturity issues make Solidity the pragmatic choice** for zkWiki's production deployment. The ~$0.0008 per article publish cost on Arbitrum is already excellent, and the stability/tooling benefits of Solidity outweigh theoretical gas optimizations.
 
 ## Explorer Links
 

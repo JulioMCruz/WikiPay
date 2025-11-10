@@ -1,4 +1,4 @@
-# WikiPay IPFS Integration - Testing Summary
+# zkWiki IPFS Integration - Testing Summary
 
 ## ✅ What's Working
 
@@ -13,12 +13,12 @@
 - ✅ Deployed official Counter example to: `0xf204abc8a9ac7023b6e039cd54b19e3afef64d20`
 - ✅ View function works: `cast call 0xf204... "number()(uint256)"` returns `0`
 - ✅ Proves our testing approach is correct
-- ✅ Same SDK version, same pattern as WikiPay
+- ✅ Same SDK version, same pattern as zkWiki
 
 ## ❌ What's Not Working
 
-### WikiPay Contract View Functions
-All deployed WikiPay contracts have view functions that revert:
+### zkWiki Contract View Functions
+All deployed zkWiki contracts have view functions that revert:
 - `get_total_articles()` ❌
 - `get_article(uint256)` ❌
 - `get_ipfs_hash(uint256)` ❌
@@ -37,7 +37,7 @@ cast call 0xea0d7ee... "get_total_articles()(uint256)" --rpc-url https://sepolia
 
 ## 🔍 Debugging Evidence
 
-### Official Example (Works) vs WikiPay (Fails)
+### Official Example (Works) vs zkWiki (Fails)
 
 **Official Counter (WORKS)**:
 ```rust
@@ -56,11 +56,11 @@ impl Counter {
 }
 ```
 
-**WikiPay (FAILS)**:
+**zkWiki (FAILS)**:
 ```rust
 sol_storage! {
     #[entrypoint]
-    pub struct WikiPayContract {
+    pub struct zkWikiContract {
         uint256 next_article_id;
         mapping(uint256 => string) ipfs_hashes;
         // ... 6 more mappings
@@ -68,14 +68,14 @@ sol_storage! {
 }
 
 #[public]
-impl WikiPayContract {
+impl zkWikiContract {
     pub fn get_total_articles(&self) -> U256 {
         self.next_article_id.get()  // ❌ Reverts!
     }
 }
 ```
 
-**Key Difference**: WikiPay has multiple mappings, Counter has single uint256.
+**Key Difference**: zkWiki has multiple mappings, Counter has single uint256.
 
 ## 🧪 Test Scripts
 
@@ -90,7 +90,7 @@ cast call 0xf204abc8a9ac7023b6e039cd54b19e3afef64d20 "number()(uint256)" --rpc-u
 # Returns: 0 ✅
 ```
 
-### Test WikiPay Contract
+### Test zkWiki Contract
 ```bash
 cd apps/wikipay-anonymous/contracts
 
@@ -117,7 +117,7 @@ Remove complex features and test minimal version:
 ```rust
 sol_storage! {
     #[entrypoint]
-    pub struct WikiPayContract {
+    pub struct zkWikiContract {
         uint256 next_article_id;
         mapping(uint256 => string) ipfs_hashes;
         mapping(uint256 => string) previews;
@@ -173,6 +173,6 @@ pub fn publish_article(...) -> U256 {
 
 **Contract Issue**: View functions revert, but this is a contract bug, not an IPFS issue.
 
-**Workaround**: Use official Stylus Counter example pattern and gradually add WikiPay features.
+**Workaround**: Use official Stylus Counter example pattern and gradually add zkWiki features.
 
 **Recommendation**: Deploy simplified contract with just IPFS storage, test incrementally.

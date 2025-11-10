@@ -56,10 +56,11 @@ export async function decryptContent(
   const encryptedBuffer = base64ToBuffer(encrypted);
   const ivBuffer = base64ToBuffer(iv);
 
-  // Decrypt
-  const decryptedBuffer = await crypto.subtle.decrypt(
+  // Decrypt - TypeScript workaround for Uint8Array<ArrayBufferLike> vs BufferSource
+  const decryptedBuffer: ArrayBuffer = await crypto.subtle.decrypt(
     {
       name: 'AES-GCM',
+      // @ts-expect-error - TS strict type issue with BufferSource
       iv: ivBuffer,
     },
     key,
@@ -83,6 +84,7 @@ export async function importKey(keyBase64: string): Promise<CryptoKey> {
 
   return await crypto.subtle.importKey(
     'raw',
+    // @ts-expect-error - TS strict type issue with BufferSource
     keyBuffer,
     {
       name: 'AES-GCM',

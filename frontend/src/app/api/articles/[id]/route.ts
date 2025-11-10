@@ -78,6 +78,7 @@ interface PaymentPayload {
   v: number;
   r: string;
   s: string;
+  signature: string; // Full EIP-712 signature (0x + 130 hex chars)
 }
 
 export async function GET(
@@ -187,7 +188,7 @@ export async function GET(
 
     // Validate payment payload structure
     console.log('\n✔️ Step 4: Validating payment structure...');
-    const requiredFields = ['articleId', 'nullifier', 'proof', 'from', 'validAfter', 'validBefore', 'nonce', 'v', 'r', 's'];
+    const requiredFields = ['articleId', 'nullifier', 'proof', 'from', 'validAfter', 'validBefore', 'nonce', 'v', 'r', 's', 'signature'];
     const missingFields = requiredFields.filter(field => !(field in paymentPayload));
 
     if (missingFields.length > 0) {

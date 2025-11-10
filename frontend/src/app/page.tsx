@@ -20,11 +20,11 @@ export default function Home() {
             </div>
           </div>
           <div className="flex gap-2 items-center">
-            <Link href="/publish">
-              <Button variant="ghost" className="hover:bg-blue-50 dark:hover:bg-slate-800">Publish</Button>
+            <Link href="/articles">
+              <Button variant="ghost" className="hover:bg-blue-50 dark:hover:bg-slate-800">Articles</Button>
             </Link>
-            <Link href="/dashboard">
-              <Button variant="ghost" className="hover:bg-purple-50 dark:hover:bg-slate-800">Dashboard</Button>
+            <Link href="/publish">
+              <Button variant="ghost" className="hover:bg-purple-50 dark:hover:bg-slate-800">Publish</Button>
             </Link>
             <ConnectButton />
           </div>

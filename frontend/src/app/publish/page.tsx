@@ -353,8 +353,8 @@ export default function PublishPage() {
             </div>
           </Link>
           <div className="flex gap-2 items-center">
-            <Link href="/dashboard">
-              <Button variant="ghost" className="hover:bg-purple-50 dark:hover:bg-slate-800">Dashboard</Button>
+            <Link href="/articles">
+              <Button variant="ghost" className="hover:bg-purple-50 dark:hover:bg-slate-800">Articles</Button>
             </Link>
             <ConnectButton />
           </div>

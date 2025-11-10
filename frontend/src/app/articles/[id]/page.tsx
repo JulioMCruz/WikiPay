@@ -266,11 +266,11 @@ export default function ArticlePage() {
             </div>
           </Link>
           <div className="flex gap-2 items-center">
+            <Link href="/articles">
+              <Button variant="ghost" className="hover:bg-purple-50 dark:hover:bg-slate-800">Articles</Button>
+            </Link>
             <Link href="/publish">
               <Button variant="ghost" className="hover:bg-purple-50 dark:hover:bg-slate-800">Publish</Button>
-            </Link>
-            <Link href="/dashboard">
-              <Button variant="ghost" className="hover:bg-purple-50 dark:hover:bg-slate-800">Dashboard</Button>
             </Link>
             <ConnectButton />
           </div>

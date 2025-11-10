@@ -119,9 +119,6 @@ export default function ArticlesPage() {
             <Link href="/publish">
               <Button variant="ghost" className="hover:bg-blue-50 dark:hover:bg-slate-800">Publish</Button>
             </Link>
-            <Link href="/dashboard">
-              <Button variant="ghost" className="hover:bg-purple-50 dark:hover:bg-slate-800">Dashboard</Button>
-            </Link>
             <ConnectButton />
           </div>
         </div>

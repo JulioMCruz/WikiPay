@@ -20,6 +20,7 @@ contract WikiPay {
     // State variables
     mapping(uint256 => Article) public articles;
     mapping(address => uint256) public creatorEarnings;
+    mapping(bytes32 => bool) public nullifiersUsed;  // Track used nullifiers for anonymous unlocks
     uint256 public totalArticles;
 
     // Events
@@ -34,6 +35,13 @@ contract WikiPay {
     event ArticleUnlocked(
         uint256 indexed articleId,
         address indexed reader,
+        uint256 price,
+        uint256 timestamp
+    );
+
+    event ArticleUnlockedAnonymous(
+        uint256 indexed articleId,
+        bytes32 indexed nullifier,
         uint256 price,
         uint256 timestamp
     );
@@ -79,7 +87,7 @@ contract WikiPay {
     }
 
     /**
-     * @notice Unlock an article by paying the price
+     * @notice Unlock an article by paying the price (public - wallet revealed)
      * @param articleId The ID of the article to unlock
      */
     function unlockArticle(uint256 articleId) external payable {
@@ -98,6 +106,42 @@ contract WikiPay {
             msg.value,
             block.timestamp
         );
+    }
+
+    /**
+     * @notice Unlock an article anonymously using zero-knowledge proof
+     * @param articleId The ID of the article to unlock
+     * @param nullifier Unique nullifier hash to prevent double-unlock
+     * @param proof Zero-knowledge proof (bytes32 for MVP, full proof structure for production)
+     * @dev MVP: Basic proof validation. Production: Full zkSNARK verification with Plonky2
+     */
+    function unlockArticleAnonymous(
+        uint256 articleId,
+        bytes32 nullifier,
+        bytes32 proof
+    ) external payable returns (bool) {
+        require(articleId < totalArticles, "Article does not exist");
+        require(!nullifiersUsed[nullifier], "Nullifier already used");
+        require(proof != bytes32(0), "Invalid proof");
+
+        Article storage article = articles[articleId];
+        require(msg.value >= article.price, "Insufficient payment");
+
+        // Mark nullifier as used (prevents double-unlock)
+        nullifiersUsed[nullifier] = true;
+
+        // Transfer payment to creator
+        creatorEarnings[article.creator] += msg.value;
+        article.unlocks++;
+
+        emit ArticleUnlockedAnonymous(
+            articleId,
+            nullifier,
+            msg.value,
+            block.timestamp
+        );
+
+        return true;
     }
 
     /**
@@ -168,5 +212,14 @@ contract WikiPay {
      */
     function getCreatorEarnings(address creator) external view returns (uint256) {
         return creatorEarnings[creator];
+    }
+
+    /**
+     * @notice Check if a nullifier has been used
+     * @param nullifier The nullifier hash to check
+     * @return true if nullifier has been used, false otherwise
+     */
+    function isNullifierUsed(bytes32 nullifier) external view returns (bool) {
+        return nullifiersUsed[nullifier];
     }
 }

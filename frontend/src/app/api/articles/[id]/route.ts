@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createPublicClient, http } from 'viem';
+import { createPublicClient, createWalletClient, http } from 'viem';
 import { arbitrum } from 'viem/chains';
+import { privateKeyToAccount } from 'viem/accounts';
 
 // Arbitrum One mainnet addresses
 const WIKIPAY_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_WIKIPAY_ADDRESS as `0x${string}`;
@@ -27,6 +28,24 @@ const WIKIPAY_ABI = [
     inputs: [{ name: 'nullifier', type: 'bytes32' }],
     outputs: [{ name: '', type: 'bool' }],
     stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'unlockArticleX402',
+    inputs: [
+      { name: 'articleId', type: 'uint256' },
+      { name: 'nullifier', type: 'bytes32' },
+      { name: 'proof', type: 'bytes32' },
+      { name: 'from', type: 'address' },
+      { name: 'validAfter', type: 'uint256' },
+      { name: 'validBefore', type: 'uint256' },
+      { name: 'nonce', type: 'bytes32' },
+      { name: 'v', type: 'uint8' },
+      { name: 'r', type: 'bytes32' },
+      { name: 's', type: 'bytes32' }
+    ],
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'nonpayable'
   }
 ] as const;
 
@@ -206,7 +225,7 @@ export async function GET(
     console.log('✅ Article ID matches');
 
     // Check if nullifier already used (prevent double-unlock)
-    console.log('\n🔒 Step 6: Checking nullifier status...');
+    console.log('\n🔒 Step 6: Checking nullifier status on-chain...');
     console.log('   Nullifier:', paymentPayload.nullifier);
 
     const isUsed = await publicClient.readContract({
@@ -428,8 +447,70 @@ export async function GET(
 
     console.log('✅ Payment settled successfully');
 
-    // x402 Step 4: Payment verified and settled → Return content
-    console.log('\n📦 Step 12: Preparing content delivery...');
+    // x402 Step 4a: Call WikiPay contract to mark nullifier as used
+    console.log('\n📝 Step 12: Marking nullifier as used on-chain...');
+    console.log('   Contract:', WIKIPAY_CONTRACT_ADDRESS);
+    console.log('   Nullifier:', paymentPayload.nullifier);
+    console.log('   Article ID:', params.id);
+    console.log('   Proof:', paymentPayload.proof);
+
+    // Get backend wallet from environment
+    const backendPrivateKey = process.env.BACKEND_PRIVATE_KEY?.trim();
+
+    if (!backendPrivateKey) {
+      console.warn('⚠️ BACKEND_PRIVATE_KEY not set - skipping on-chain nullifier marking');
+      console.warn('   Users will be able to pay again if they reload the page!');
+    } else if (!backendPrivateKey.startsWith('0x') || backendPrivateKey.length !== 66) {
+      console.error('❌ Invalid BACKEND_PRIVATE_KEY format - must be 0x followed by 64 hex characters');
+      console.error(`   Current length: ${backendPrivateKey.length}, starts with 0x: ${backendPrivateKey.startsWith('0x')}`);
+    } else {
+      try {
+        // Create wallet client with backend wallet
+        const account = privateKeyToAccount(backendPrivateKey as `0x${string}`);
+        const walletClient = createWalletClient({
+          account,
+          chain: arbitrum,
+          transport: http()
+        });
+
+        console.log('   Backend wallet:', account.address);
+
+        // Call unlockArticleX402 (payment already done via USDC by facilitator)
+        const txHash = await walletClient.writeContract({
+          address: WIKIPAY_CONTRACT_ADDRESS,
+          abi: WIKIPAY_ABI,
+          functionName: 'unlockArticleX402',
+          args: [
+            BigInt(params.id), // articleId
+            paymentPayload.nullifier as `0x${string}`, // nullifier
+            paymentPayload.proof as `0x${string}`, // proof
+            paymentPayload.from as `0x${string}`, // from (user who signed)
+            BigInt(paymentPayload.validAfter), // validAfter
+            BigInt(paymentPayload.validBefore), // validBefore
+            paymentPayload.nonce as `0x${string}`, // nonce
+            paymentPayload.v, // v
+            paymentPayload.r as `0x${string}`, // r
+            paymentPayload.s as `0x${string}` // s
+          ]
+        });
+
+        console.log('✅ Contract call submitted:', txHash);
+
+        // Wait for transaction confirmation
+        const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+        console.log('✅ Transaction confirmed at block:', receipt.blockNumber);
+        console.log('   Gas used:', receipt.gasUsed);
+
+      } catch (error: any) {
+        console.error('❌ Failed to mark nullifier on-chain:', error.message);
+        console.error('   Settlement was successful, but on-chain marking failed');
+        console.error('   User may be able to unlock again if page is reloaded');
+        // Don't fail the entire request - settlement was successful
+      }
+    }
+
+    // x402 Step 4b: Payment verified and settled → Return content
+    console.log('\n📦 Step 13: Preparing content delivery...');
     console.log('   IPFS Hash:', ipfsHash);
     console.log('   Transaction:', facilitatorResult.transaction);
 

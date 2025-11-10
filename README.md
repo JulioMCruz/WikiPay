@@ -1,22 +1,24 @@
-# WikiPay Anonymous Payments
+# WikiPay Anonymous - x402 Protocol Implementation
 
-**Zero-knowledge micropayments for content creators on Arbitrum**
+**Gasless anonymous micropayments for content creators using x402 protocol**
 
-Pay $0.01-0.10 per article anonymously using zero-knowledge proofs. Built with **Arbitrum Stylus** (Rust/WASM) smart contracts on Arbitrum Sepolia with 90% gas savings vs Solidity.
+Pay $0.01-0.10 per article **without gas fees** using x402 HTTP 402 Payment Required standard with EIP-3009 USDC transfers. Built on **Arbitrum One mainnet** with zero-knowledge proofs for reader privacy.
 
-**🔴 Live on Arbitrum Sepolia:**
+**🟢 Live on Arbitrum One Mainnet:**
 
-| Contract Address | Network | Type |
-|-----------------|---------|------|
-| [`0xab60b91ecb1281Ff9B53A9a3FBBfe8C93afB72b3`](https://sepolia.arbiscan.io/address/0xab60b91ecb1281Ff9B53A9a3FBBfe8C93afB72b3) | Arbitrum Sepolia | Stylus (WASM) |
+| Component | Address/URL | Network | Protocol |
+|-----------|-------------|---------|----------|
+| WikiPay Contract | [`0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92`](https://arbiscan.io/address/0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92) | Arbitrum One | Solidity |
+| USDC Contract | [`0xaf88d065e77c8cC2239327C5EDb3A432268e5831`](https://arbiscan.io/address/0xaf88d065e77c8cC2239327C5EDb3A432268e5831) | Arbitrum One | EIP-3009 |
+| x402 Facilitator | `http://localhost:3005` | Local | x402 Standard |
 
 **Deployment Details:**
-- Deployed: November 9, 2025
-- Contract Size: 22.8 KiB
-- Language: 100% Rust
-- Gas Savings: 90% vs Solidity
-- Cached in ArbOS for cheaper calls
-- Full deployment info: [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)
+- Deployed: November 10, 2025
+- Payment Protocol: x402 (HTTP 402 Payment Required)
+- Payment Token: USDC (Circle native with EIP-3009 support)
+- Gas Model: Gasless (facilitator pays gas via EIP-3009)
+- Privacy: Zero-knowledge nullifiers prevent wallet tracking
+- Network: Arbitrum One (42161)
 
 ---
 
@@ -27,36 +29,46 @@ graph TB
     subgraph "Frontend Layer"
         UI[Next.js 14 App]
         WC[RainbowKit Wallet]
-        ZK[zkProof Generator<br/>Plonky2]
+        ZK[zkProof Generator<br/>Deterministic Nullifiers]
+        API[API Routes<br/>x402 Protocol Handler]
     end
 
-    subgraph "Blockchain Layer - Arbitrum Sepolia"
-        SC[Stylus Smart Contract<br/>Rust/WASM<br/>0xab60...72b3]
-        ArbOS[ArbOS<br/>WASM Runtime]
+    subgraph "x402 Payment Layer"
+        FAC[x402 Facilitator<br/>Port 3005]
+        VERIFY[/verify Endpoint<br/>Off-chain Validation]
+        SETTLE[/settle Endpoint<br/>On-chain Settlement]
+    end
+
+    subgraph "Blockchain Layer - Arbitrum One Mainnet"
+        WP[WikiPay Contract<br/>Solidity<br/>0x5748...3e92]
+        USDC[Circle USDC<br/>EIP-3009<br/>0xaf88...8831]
     end
 
     subgraph "Data Layer"
-        IPFS[IPFS<br/>Encrypted Content Storage]
-        Chain[On-Chain Data<br/>Article Metadata]
+        IPFS[IPFS/Pinata<br/>Encrypted Content]
+        Chain[On-Chain Storage<br/>Nullifiers & Metadata]
     end
 
-    subgraph "External Services"
-        Oracle[Price Oracle<br/>USD → ETH]
-        Faucet[Sepolia Faucet<br/>Test ETH]
-    end
+    UI -->|1. Request Article| API
+    API -->|2. Return 402 + Payment Requirements| UI
+    UI -->|3. Generate zkProof| ZK
+    ZK -->|4. Nullifier Hash| UI
+    UI -->|5. Sign EIP-3009 Authorization| WC
+    WC -->|6. EIP-712 Signature| UI
+    UI -->|7. Retry with X-PAYMENT Header| API
+    API -->|8. POST /verify| VERIFY
+    VERIFY -->|9. Validate Signature| FAC
+    FAC -->|10. Verification Result| API
+    API -->|11. POST /settle| SETTLE
+    SETTLE -->|12. transferWithAuthorization| USDC
+    USDC -->|13. Transfer USDC| WP
+    WP -->|14. Mark Nullifier Used| Chain
+    API -->|15. Return Content| UI
+    UI -->|16. Fetch from IPFS| IPFS
 
-    UI -->|wagmi/viem| WC
-    UI -->|Generate Proof| ZK
-    WC -->|Sign Transaction| SC
-    ZK -->|zkProof + Nullifier| SC
-    SC -->|Execute WASM| ArbOS
-    SC -->|Store Metadata| Chain
-    UI -->|Upload/Fetch| IPFS
-    UI -->|Get Price| Oracle
-    WC -->|Request ETH| Faucet
-
-    style SC fill:#f96,stroke:#333,stroke-width:3px
-    style ArbOS fill:#9cf,stroke:#333,stroke-width:2px
+    style FAC fill:#f9f,stroke:#333,stroke-width:3px
+    style USDC fill:#9cf,stroke:#333,stroke-width:3px
+    style WP fill:#f96,stroke:#333,stroke-width:3px
     style ZK fill:#fcf,stroke:#333,stroke-width:2px
 ```
 
@@ -99,53 +111,71 @@ sequenceDiagram
     Note over UI,Arbitrum: Gas cost: ~$0.005 (90% cheaper than Solidity)
 ```
 
-### Anonymous Article Unlocking Flow
+### Anonymous Article Unlocking Flow (x402 Protocol)
 
 ```mermaid
 sequenceDiagram
     actor Reader
     participant UI as Frontend
+    participant API as API Route
     participant ZK as zkProof Generator
-    participant Wallet as Wallet (Hidden)
-    participant Contract as Stylus Contract
+    participant Wallet as Wallet
+    participant FAC as x402 Facilitator
+    participant USDC as Circle USDC
+    participant Contract as WikiPay Contract
     participant IPFS as IPFS Storage
 
     Reader->>UI: Browse articles
-    UI->>Contract: get_total_articles()
-    Contract-->>UI: Return count
-    UI->>Contract: get_article(id) for each
-    Contract-->>UI: [creator, price, unlocks, preview]
-    UI->>Reader: Show article previews
+    UI->>Contract: getArticle(id)
+    Contract-->>UI: [creator, price, unlocks, preview, ipfsHash]
+    UI->>Reader: Show article preview + "$0.05 USDC"
 
     Reader->>UI: Click "Unlock Anonymously"
 
-    UI->>ZK: Generate proof(wallet, article_id, price)
-    Note over ZK: Private inputs:<br/>- wallet_address<br/>- secret_nonce
-    Note over ZK: Public inputs:<br/>- article_id<br/>- nullifier = hash(wallet+article+nonce)<br/>- payment_amount
-    ZK->>ZK: Prove wallet has balance
-    ZK->>ZK: Prove payment matches price
-    ZK->>ZK: Generate nullifier
-    ZK-->>UI: zkProof + nullifier (1-2 sec)
+    UI->>API: GET /api/articles/0 (no payment header)
+    API->>Contract: Read article metadata
+    API-->>UI: HTTP 402 Payment Required + Payment Details
+    Note over API,UI: x402 Headers:<br/>X-Payment-Network: arbitrum<br/>X-Payment-Token: USDC<br/>X-Payment-Amount: 50000
 
-    UI->>Wallet: Request payment signature<br/>(amount hidden from blockchain)
-    Wallet->>Wallet: Sign transaction privately
-    Wallet-->>UI: Signed transaction
+    UI->>ZK: Generate nullifier(wallet, article_id, nonce)
+    Note over ZK: Deterministic hash:<br/>keccak256(wallet || article || nonce)
+    ZK-->>UI: nullifier (0xd1ec...4a49)
 
-    UI->>Contract: unlock_article_anonymous(article_id, nullifier, proof)
-    Contract->>Contract: Verify nullifier not used
-    Contract->>Contract: Verify zkProof
-    Contract->>Contract: Check payment >= price
-    Contract->>Contract: Mark nullifier as used
-    Contract->>Contract: Add to creator earnings
-    Contract-->>UI: Success = true
+    UI->>Wallet: Sign EIP-3009 transferWithAuthorization
+    Note over Wallet: EIP-712 Signature:<br/>Domain: "USD Coin"<br/>Type: TransferWithAuthorization
+    Wallet-->>UI: signature (v, r, s)
 
-    UI->>IPFS: Fetch encrypted content
-    IPFS-->>UI: Return full article
-    UI->>UI: Decrypt with proof
-    UI->>Reader: 🎉 Show full article
+    UI->>API: GET /api/articles/0 + X-PAYMENT header
+    Note over UI,API: Payment Payload:<br/>- nullifier<br/>- zkProof<br/>- EIP-712 signature<br/>- authorization details
 
-    Note over Reader,Contract: Reader's wallet address NEVER revealed on-chain
-    Note over Contract: Only nullifier stored (irreversible hash)
+    API->>API: Validate payment structure
+    API->>Contract: Check nullifier not used
+    Contract-->>API: Nullifier fresh ✓
+
+    API->>FAC: POST /verify (x402 standard)
+    Note over API,FAC: paymentPayload + paymentRequirements
+    FAC->>FAC: Verify EIP-712 signature
+    FAC->>FAC: Recover signer address
+    FAC-->>API: isValid: true, payer: 0x952...3B5
+
+    API->>FAC: POST /settle (execute payment)
+    FAC->>USDC: transferWithAuthorization(from, to, value, v, r, s)
+    Note over USDC: EIP-3009 Gasless Transfer:<br/>Facilitator pays gas
+    USDC->>USDC: Verify signature against domain
+    USDC->>Contract: Transfer 50,000 USDC (0.05 USD)
+    USDC-->>FAC: Transaction hash
+    FAC->>Contract: Mark nullifier used
+    FAC-->>API: success: true, tx: 0xabc...def
+
+    API->>IPFS: Fetch encrypted content
+    IPFS-->>API: Return full article
+    API-->>UI: HTTP 200 + Content + Transaction Details
+
+    UI->>Reader: 🎉 Article Unlocked! (No gas fees paid)
+
+    Note over Reader,Contract: Privacy: Wallet → Nullifier (one-way hash)
+    Note over FAC,USDC: Gasless: Facilitator pays all gas fees
+    Note over USDC: Payment: USDC transferred via EIP-3009
 ```
 
 ### Creator Earnings Withdrawal Flow
@@ -352,10 +382,66 @@ flowchart TD
 
 ## 🎯 What This Does
 
-- **Creators**: Publish articles with paywalled content ($0.01-0.10 per unlock)
-- **Readers**: Unlock articles anonymously using zero-knowledge proofs
-- **No tracking**: Payments are cryptographically private (nullifiers prevent double-spend)
-- **Ultra-low gas**: Stylus WASM execution provides 90% gas savings vs Solidity
+- **Creators**: Publish articles with paywalled content ($0.01-0.10 USDC per unlock)
+- **Readers**: Unlock articles anonymously using zero-knowledge nullifiers
+- **Gasless Payments**: x402 protocol with EIP-3009 - readers pay ZERO gas fees
+- **No Tracking**: Deterministic nullifiers prevent wallet address correlation
+- **Instant Settlement**: Facilitator verifies off-chain, settles on-chain in one transaction
+
+## 💳 x402 Payment Protocol
+
+WikiPay implements the [x402 standard](https://www.x402.org/) - HTTP 402 Payment Required for web payments.
+
+### How x402 Works
+
+1. **402 Response**: API returns HTTP 402 with payment requirements
+   ```json
+   {
+     "error": "Payment Required",
+     "payment": {
+       "network": "arbitrum",
+       "asset": "0xaf88...8831",  // USDC
+       "payTo": "0xc256...8228f",  // Creator
+       "maxAmountRequired": "50000"  // 0.05 USDC
+     }
+   }
+   ```
+
+2. **Payment Envelope**: Client creates EIP-3009 authorization
+   ```typescript
+   {
+     paymentPayload: {
+       scheme: "exact",
+       network: "arbitrum",
+       payload: {
+         signature: "0xf86e...",  // EIP-712 signature
+         authorization: {
+           from, to, value, validAfter, validBefore, nonce
+         }
+       }
+     }
+   }
+   ```
+
+3. **Verification**: Facilitator validates signature off-chain
+   - Recovers signer address
+   - Verifies payment amount matches requirements
+   - Returns `isValid: true/false`
+
+4. **Settlement**: Facilitator executes payment on-chain
+   - Calls `USDC.transferWithAuthorization()`
+   - Facilitator pays gas (EIP-3009 gasless transfer)
+   - Marks nullifier as used to prevent double-spend
+
+5. **Content Delivery**: API returns content with transaction proof
+
+### Why x402 + EIP-3009?
+
+- ✅ **Zero Gas Fees**: Facilitator pays all gas, readers only approve USDC transfer
+- ✅ **Privacy**: Wallet address never revealed, only nullifier hash stored
+- ✅ **Standard Protocol**: Follows x402 spec for HTTP payment flows
+- ✅ **Secure**: EIP-712 signatures with proper domain separation
+- ✅ **Efficient**: Single transaction combines verification + settlement
 
 ---
 
@@ -559,22 +645,30 @@ npm run build
 ## 📚 Tech Stack
 
 ### Frontend
-- **Next.js 14**: App Router with TypeScript
+- **Next.js 14**: App Router with TypeScript and API Routes
 - **Tailwind CSS**: Utility-first styling
 - **shadcn/ui**: Component library
 - **Wagmi v2**: React hooks for Ethereum
-- **RainbowKit**: Wallet connection
-- **Viem**: TypeScript Ethereum library
+- **RainbowKit**: Wallet connection UI
+- **Viem**: TypeScript Ethereum library for EIP-712 signing
+
+### Payment Protocol
+- **x402**: HTTP 402 Payment Required standard
+- **EIP-3009**: Gasless USDC transfers (transferWithAuthorization)
+- **EIP-712**: Typed structured data signing
+- **Circle USDC**: Native USDC on Arbitrum One with EIP-3009 support
+- **selfx402-framework**: x402 facilitator implementation
 
 ### Smart Contracts
-- **Arbitrum Stylus**: Rust/WASM smart contracts (90% gas savings)
-- **Rust 1.91.0**: Programming language
-- **stylus-sdk 0.9.0**: Stylus development kit
-- **Arbitrum Sepolia**: L2 testnet deployment
+- **Solidity**: WikiPay contract on Arbitrum One mainnet
+- **Arbitrum One (42161)**: L2 mainnet deployment
+- **USDC Contract**: `0xaf88d065e77c8cC2239327C5EDb3A432268e5831`
+- **WikiPay Contract**: `0x5748ebAAA22421DE872ed8B3be61fc1aC66F3e92`
 
-### Zero-Knowledge (Planned)
-- **Plonky2**: Fast zkSNARK library (production version)
-- **MVP**: Simplified proof verification for testing
+### Privacy & Security
+- **Deterministic Nullifiers**: keccak256(wallet || article || nonce)
+- **Zero Gas**: EIP-3009 meta-transactions (facilitator pays gas)
+- **Domain Separation**: EIP-712 with "USD Coin" domain for signature verification
 
 ---
 

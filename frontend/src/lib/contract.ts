@@ -1,4 +1,4 @@
-import { createPublicClient, createWalletClient, custom, http, parseUnits } from 'viem';
+import { createPublicClient, createWalletClient, custom, http, parseUnits, keccak256, toBytes } from 'viem';
 import { arbitrum } from 'viem/chains';
 import WikiPayX402ABI from './WikiPayX402-ABI.json';
 
@@ -226,13 +226,15 @@ export async function checkIfUnlocked(articleId: bigint): Promise<boolean> {
     // Generate the nullifier this wallet would use
     const nullifier = await generateDeterministicNullifier(account, articleId);
 
-    // Check if nullifier is used on-chain
+    // Check if nullifier is used on-chain (WikiPay contract)
     const isUsed = await publicClient.readContract({
       address: WIKIPAY_CONTRACT_ADDRESS,
       abi: WIKIPAY_ABI,
       functionName: 'nullifiersUsed',
       args: [nullifier as `0x${string}`]
     });
+
+    console.log(`✅ Nullifier check for article ${articleId}:`, isUsed);
 
     return isUsed as boolean;
   } catch (error) {
@@ -320,8 +322,14 @@ export async function unlockArticle(articleId: bigint, price: bigint) {
   console.log("Generated nullifier:", nullifier);
   console.log("Generated proof:", proof);
 
-  // Generate unique nonce for EIP-3009 (using nullifier ensures uniqueness)
-  const nonce = nullifier;
+  // Generate unique nonce for EIP-3009
+  // IMPORTANT: Nonce must be unique for each authorization attempt
+  // We use nullifier + timestamp to ensure uniqueness while maintaining some determinism
+  const timestamp = BigInt(Math.floor(Date.now() / 1000));
+  const nonceData = `${nullifier}${timestamp.toString()}`;
+  const nonce = keccak256(toBytes(nonceData)) as `0x${string}`;
+
+  console.log("Generated EIP-3009 nonce:", nonce);
 
   // Set validity window (current time to 1 hour from now)
   const validAfter = BigInt(Math.floor(Date.now() / 1000));

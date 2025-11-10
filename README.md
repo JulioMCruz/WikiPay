@@ -20,6 +20,336 @@ Pay $0.01-0.10 per article anonymously using zero-knowledge proofs. Built with *
 
 ---
 
+## 🏗️ System Architecture
+
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        UI[Next.js 14 App]
+        WC[RainbowKit Wallet]
+        ZK[zkProof Generator<br/>Plonky2]
+    end
+
+    subgraph "Blockchain Layer - Arbitrum Sepolia"
+        SC[Stylus Smart Contract<br/>Rust/WASM<br/>0xab60...72b3]
+        ArbOS[ArbOS<br/>WASM Runtime]
+    end
+
+    subgraph "Data Layer"
+        IPFS[IPFS<br/>Encrypted Content Storage]
+        Chain[On-Chain Data<br/>Article Metadata]
+    end
+
+    subgraph "External Services"
+        Oracle[Price Oracle<br/>USD → ETH]
+        Faucet[Sepolia Faucet<br/>Test ETH]
+    end
+
+    UI -->|wagmi/viem| WC
+    UI -->|Generate Proof| ZK
+    WC -->|Sign Transaction| SC
+    ZK -->|zkProof + Nullifier| SC
+    SC -->|Execute WASM| ArbOS
+    SC -->|Store Metadata| Chain
+    UI -->|Upload/Fetch| IPFS
+    UI -->|Get Price| Oracle
+    WC -->|Request ETH| Faucet
+
+    style SC fill:#f96,stroke:#333,stroke-width:3px
+    style ArbOS fill:#9cf,stroke:#333,stroke-width:2px
+    style ZK fill:#fcf,stroke:#333,stroke-width:2px
+```
+
+## 🔄 Sequence Diagrams
+
+### Article Publishing Flow
+
+```mermaid
+sequenceDiagram
+    actor Creator
+    participant UI as Frontend
+    participant Wallet as RainbowKit
+    participant Contract as Stylus Contract
+    participant IPFS as IPFS Storage
+    participant Arbitrum as Arbitrum Sepolia
+
+    Creator->>UI: Write article + set price
+    UI->>Creator: Show preview
+    Creator->>UI: Click "Publish"
+
+    UI->>Wallet: Request wallet connection
+    Wallet->>Creator: Show wallet options
+    Creator->>Wallet: Connect wallet
+    Wallet-->>UI: Connected (address)
+
+    UI->>IPFS: Upload encrypted content
+    IPFS-->>UI: Return IPFS hash
+
+    UI->>Contract: publish_article(preview, ipfs_hash, price)
+    Contract->>Contract: Validate price (0.01-0.10 ETH)
+    Contract->>Contract: Generate article_id
+    Contract->>Contract: Store article data
+
+    Contract->>Arbitrum: Execute WASM transaction
+    Arbitrum-->>Contract: Transaction confirmed
+    Contract-->>UI: Article ID + tx hash
+
+    UI->>Creator: ✅ Published! Show tx details
+
+    Note over UI,Arbitrum: Gas cost: ~$0.005 (90% cheaper than Solidity)
+```
+
+### Anonymous Article Unlocking Flow
+
+```mermaid
+sequenceDiagram
+    actor Reader
+    participant UI as Frontend
+    participant ZK as zkProof Generator
+    participant Wallet as Wallet (Hidden)
+    participant Contract as Stylus Contract
+    participant IPFS as IPFS Storage
+
+    Reader->>UI: Browse articles
+    UI->>Contract: get_total_articles()
+    Contract-->>UI: Return count
+    UI->>Contract: get_article(id) for each
+    Contract-->>UI: [creator, price, unlocks, preview]
+    UI->>Reader: Show article previews
+
+    Reader->>UI: Click "Unlock Anonymously"
+
+    UI->>ZK: Generate proof(wallet, article_id, price)
+    Note over ZK: Private inputs:<br/>- wallet_address<br/>- secret_nonce
+    Note over ZK: Public inputs:<br/>- article_id<br/>- nullifier = hash(wallet+article+nonce)<br/>- payment_amount
+    ZK->>ZK: Prove wallet has balance
+    ZK->>ZK: Prove payment matches price
+    ZK->>ZK: Generate nullifier
+    ZK-->>UI: zkProof + nullifier (1-2 sec)
+
+    UI->>Wallet: Request payment signature<br/>(amount hidden from blockchain)
+    Wallet->>Wallet: Sign transaction privately
+    Wallet-->>UI: Signed transaction
+
+    UI->>Contract: unlock_article_anonymous(article_id, nullifier, proof)
+    Contract->>Contract: Verify nullifier not used
+    Contract->>Contract: Verify zkProof
+    Contract->>Contract: Check payment >= price
+    Contract->>Contract: Mark nullifier as used
+    Contract->>Contract: Add to creator earnings
+    Contract-->>UI: Success = true
+
+    UI->>IPFS: Fetch encrypted content
+    IPFS-->>UI: Return full article
+    UI->>UI: Decrypt with proof
+    UI->>Reader: 🎉 Show full article
+
+    Note over Reader,Contract: Reader's wallet address NEVER revealed on-chain
+    Note over Contract: Only nullifier stored (irreversible hash)
+```
+
+### Creator Earnings Withdrawal Flow
+
+```mermaid
+sequenceDiagram
+    actor Creator
+    participant UI as Dashboard
+    participant Wallet as Creator Wallet
+    participant Contract as Stylus Contract
+    participant Arbitrum as Arbitrum Network
+
+    Creator->>UI: View dashboard
+    UI->>Contract: get_creator_earnings(creator_address)
+    Contract-->>UI: Return earnings in wei
+    UI->>Creator: Display earnings ($USD + ETH)
+
+    Creator->>UI: Click "Withdraw Earnings"
+    UI->>Wallet: Request transaction signature
+    Wallet->>Creator: Confirm withdrawal
+    Creator->>Wallet: Approve
+
+    Wallet->>Contract: withdraw_earnings()
+    Contract->>Contract: Get creator earnings
+    Contract->>Contract: Verify earnings > 0
+    Contract->>Contract: Reset earnings to 0<br/>(reentrancy protection)
+    Contract->>Arbitrum: transfer_eth(creator, amount)
+
+    alt Transfer Success
+        Arbitrum-->>Contract: Transfer confirmed
+        Contract-->>UI: Earnings amount
+        UI->>Creator: ✅ Withdrawn! Show tx hash
+    else Transfer Failed
+        Arbitrum-->>Contract: Transfer failed
+        Contract->>Contract: Restore earnings
+        Contract-->>UI: Error
+        UI->>Creator: ❌ Withdrawal failed
+    end
+
+    Note over Contract: Gas cost: ~$0.0015 (70% cheaper)
+```
+
+### Zero-Knowledge Proof Generation (Detailed)
+
+```mermaid
+sequenceDiagram
+    participant Reader as Reader's Browser
+    participant ZK as Plonky2 Circuit
+    participant Contract as Stylus Contract
+
+    Reader->>ZK: Initialize circuit with:<br/>- Private: wallet_address, secret_nonce<br/>- Public: article_id, payment_amount
+
+    ZK->>ZK: Constraint 1: Verify wallet balance
+    Note over ZK: balance(wallet_address) >= payment_amount
+
+    ZK->>ZK: Constraint 2: Compute nullifier
+    Note over ZK: nullifier = keccak256(wallet || article_id || nonce)
+
+    ZK->>ZK: Constraint 3: Verify payment
+    Note over ZK: payment_amount == article_price
+
+    ZK->>ZK: Constraint 4: Verify ownership
+    Note over ZK: msg.sender can sign for wallet_address
+
+    ZK->>ZK: Generate proof (1-2 seconds)
+    Note over ZK: Proof size: ~32 bytes (bytes32)
+
+    ZK-->>Reader: Return proof + nullifier
+
+    Reader->>Contract: Submit proof + nullifier + payment
+    Contract->>Contract: Verify proof structure
+    Contract->>Contract: Check nullifier not used
+    Contract->>Contract: Verify payment amount
+    Contract-->>Reader: Success (no wallet revealed)
+
+    Note over Reader,Contract: Privacy guarantee:<br/>Blockchain only sees nullifier<br/>Cannot link to wallet address
+```
+
+### Data Flow & Storage Architecture
+
+```mermaid
+graph LR
+    subgraph "Article Data Storage"
+        M1[Article Metadata<br/>On-Chain]
+        M2[Preview Text<br/>On-Chain]
+        M3[Encrypted Content<br/>IPFS]
+    end
+
+    subgraph "Payment Data"
+        P1[Price USD<br/>On-Chain]
+        P2[Unlock Count<br/>On-Chain]
+        P3[Creator Earnings<br/>On-Chain]
+    end
+
+    subgraph "Privacy Data"
+        V1[Nullifier Hash<br/>On-Chain]
+        V2[zkProof<br/>Ephemeral]
+        V3[Wallet Address<br/>Never Stored]
+    end
+
+    subgraph "Smart Contract State"
+        SC[Stylus Contract<br/>Arbitrum Sepolia]
+    end
+
+    M1 --> SC
+    M2 --> SC
+    P1 --> SC
+    P2 --> SC
+    P3 --> SC
+    V1 --> SC
+    M3 -.->|IPFS Hash| SC
+    V2 -.->|Verified, Not Stored| SC
+    V3 -.->|NEVER touches chain| SC
+
+    style V3 fill:#fcc,stroke:#f00,stroke-width:3px
+    style V2 fill:#fcf,stroke:#f0f,stroke-width:2px
+    style SC fill:#f96,stroke:#333,stroke-width:3px
+```
+
+### Gas Optimization Flow (Stylus vs Solidity)
+
+```mermaid
+graph TB
+    subgraph "Solidity Path (Traditional)"
+        S1[Solidity Code]
+        S2[Compile to EVM Bytecode]
+        S3[Execute on EVM<br/>~300K gas]
+        S4[High Gas Costs<br/>~$0.03]
+    end
+
+    subgraph "Stylus Path (90% Cheaper)"
+        R1[Rust Code]
+        R2[Compile to WASM]
+        R3[Execute on ArbOS<br/>~30K gas]
+        R4[Low Gas Costs<br/>~$0.003]
+    end
+
+    S1 --> S2 --> S3 --> S4
+    R1 --> R2 --> R3 --> R4
+
+    style R3 fill:#9f9,stroke:#393,stroke-width:3px
+    style S3 fill:#f99,stroke:#933,stroke-width:2px
+    style R4 fill:#9f9,stroke:#393,stroke-width:3px
+    style S4 fill:#f99,stroke:#933,stroke-width:2px
+```
+
+### Complete System Integration
+
+```mermaid
+flowchart TD
+    Start([User Opens App]) --> CheckWallet{Wallet<br/>Connected?}
+    CheckWallet -->|No| ConnectWallet[Connect via RainbowKit]
+    CheckWallet -->|Yes| UserType{User Type?}
+    ConnectWallet --> UserType
+
+    UserType -->|Creator| CreateFlow[Go to /publish]
+    UserType -->|Reader| BrowseFlow[Browse Articles]
+
+    CreateFlow --> WriteArticle[Write Article Content]
+    WriteArticle --> SetPrice[Set Price $0.01-0.10]
+    SetPrice --> ClickPublish[Click Publish]
+    ClickPublish --> EncryptContent[Encrypt Full Content]
+    EncryptContent --> UploadIPFS[Upload to IPFS]
+    UploadIPFS --> CallContract1[Call publish_article<br/>preview, ipfs_hash, price]
+    CallContract1 --> WasmExec1[Stylus WASM Execution]
+    WasmExec1 --> TxConfirm1[Transaction Confirmed]
+    TxConfirm1 --> ShowSuccess1[Show Article ID + Tx Hash]
+    ShowSuccess1 --> End1([Article Live on Chain])
+
+    BrowseFlow --> LoadArticles[Load Article Previews]
+    LoadArticles --> SelectArticle[Click Article]
+    SelectArticle --> CheckUnlocked{Already<br/>Unlocked?}
+    CheckUnlocked -->|Yes| ShowFull[Show Full Content]
+    CheckUnlocked -->|No| ShowPreview[Show Preview + Price]
+    ShowPreview --> ClickUnlock[Click Unlock Anonymously]
+
+    ClickUnlock --> GenProof[Generate zkProof<br/>1-2 seconds]
+    GenProof --> CreateNull[Create Nullifier<br/>hash wallet+article+nonce]
+    CreateNull --> SignTx[Sign Transaction]
+    SignTx --> CallContract2[Call unlock_article_anonymous<br/>article_id, nullifier, proof]
+    CallContract2 --> VerifyProof[Verify zkProof]
+    VerifyProof --> CheckNull{Nullifier<br/>Used?}
+    CheckNull -->|Yes| Error1[Error: Already Unlocked]
+    CheckNull -->|No| MarkNull[Mark Nullifier Used]
+    MarkNull --> AddEarnings[Add to Creator Earnings]
+    AddEarnings --> TxConfirm2[Transaction Confirmed]
+    TxConfirm2 --> FetchIPFS[Fetch from IPFS]
+    FetchIPFS --> DecryptContent[Decrypt Content]
+    DecryptContent --> ShowFull
+    ShowFull --> End2([Article Unlocked Anonymously])
+
+    Error1 --> End3([Transaction Failed])
+
+    style Start fill:#9cf,stroke:#333,stroke-width:2px
+    style GenProof fill:#fcf,stroke:#333,stroke-width:2px
+    style WasmExec1 fill:#9f9,stroke:#333,stroke-width:2px
+    style VerifyProof fill:#fcf,stroke:#333,stroke-width:2px
+    style End1 fill:#9f9,stroke:#333,stroke-width:3px
+    style End2 fill:#9f9,stroke:#333,stroke-width:3px
+    style End3 fill:#f99,stroke:#333,stroke-width:2px
+```
+
+---
+
 ## 🎯 What This Does
 
 - **Creators**: Publish articles with paywalled content ($0.01-0.10 per unlock)

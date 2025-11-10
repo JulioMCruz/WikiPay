@@ -36,6 +36,43 @@
       "artifacts": [
         "WikiPay"
       ]
+    },
+    "/Users/osx/Projects/JulioMCruz/project-ideas-main/apps/wikipay-anonymous/contracts-solidity/contracts/WikiPayX402.sol": {
+      "lastModificationDate": 1762760240656,
+      "contentHash": "29360fa0c23ddd2c3a6e61f02e124602",
+      "sourceName": "contracts/WikiPayX402.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "IERC3009",
+        "WikiPayX402"
+      ]
     }
   }
 }

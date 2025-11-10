@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { publishArticle } from "@/lib/contract";
 import { useAccount } from "wagmi";
+import { simpleEncrypt } from "@/lib/encryption";
+import { uploadToPinata } from "@/lib/pinata";
 
 const exampleArticles = {
   x402: {
@@ -143,24 +145,44 @@ export default function PublishPage() {
       setPublishResult(null);
       console.log("📝 Publishing state set to true");
 
-      // Call real blockchain publish function
-      console.log("📡 Publishing to Arbitrum Stylus contract...");
+      // Step 1: Encrypt content
+      console.log("🔐 Encrypting content...");
+      const fullContent = `# ${title}\n\n${content}`;
+      const { encrypted, iv, key } = await simpleEncrypt(fullContent);
+      console.log("✅ Content encrypted");
 
+      // Step 2: Upload to Pinata IPFS
+      console.log("📤 Uploading to Pinata IPFS...");
+      const ipfsHash = await uploadToPinata({
+        title,
+        encrypted,
+        iv,
+        encryptionKey: key,
+        creator: address || "",
+        timestamp: Date.now(),
+        preview
+      });
+      console.log("✅ Uploaded to IPFS:", ipfsHash);
+
+      // Step 3: Publish to blockchain (only IPFS hash)
+      console.log("📡 Publishing to Arbitrum Stylus contract...");
       const result = await publishArticle({
         title,
         preview,
-        content,
-        priceUSD: price
+        content, // Not used anymore, but kept for compatibility
+        priceUSD: price,
+        ipfsHash
       });
 
       console.log("🎉 Article published successfully!");
       console.log("Transaction hash:", result.transactionHash);
       console.log("Block number:", result.blockNumber);
       console.log("Gas used:", result.gasUsed.toString());
+      console.log("IPFS hash:", ipfsHash);
 
-      setPublishResult(result);
+      setPublishResult({ ...result, ipfsHash });
 
-      alert(`Article published successfully!\n\nTransaction: ${result.transactionHash.slice(0, 10)}...`);
+      alert(`Article published successfully!\n\nTransaction: ${result.transactionHash.slice(0, 10)}...\nIPFS: ${ipfsHash.slice(0, 15)}...`);
 
     } catch (error: any) {
       console.error("❌ Error publishing article:", error);

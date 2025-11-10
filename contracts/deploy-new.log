@@ -1,0 +1,22 @@
+Running in a Docker container for reproducibility, this may take a while
+NOTE: You can opt out by doing --no-verify
+[0;0m[90mRunning reproducible Stylus command with toolchain [38;5;48;1m1.91.0[0;0m[0;0m
+WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested
+info: syncing channel updates for '1.91.0-x86_64-unknown-linux-gnu'
+info: latest update on 2025-10-30, rust version 1.91.0 (f8297e351 2025-10-28)
+info: component 'rust-std' for target 'wasm32-unknown-unknown' is up to date
+info: downloading component 'clippy'
+info: downloading component 'rustfmt'
+info: installing component 'clippy'
+info: installing component 'rustfmt'
+[0;0m[90mstripped custom section from user wasm to remove any sensitive data[0;0m
+[0;0m[90mcontract size: [33;1m21.9 KiB[0;0m[90m (22461 bytes)[0;0m
+[0;0m[90mwasm data fee: [38;5;48;1m0.000124 ETH[0;0m [0;0m[90m(originally [38;5;48;1m0.000103 ETH[0;0m[0;0m[90m with [38;5;183;1m20%[0;0m[90m bump)[0;0m
+Error: stylus deploy failed
+
+Caused by:
+   0: could not open private key file
+   1: stream did not contain valid UTF-8
+
+Location:
+    main/src/wallet.rs:25:48
